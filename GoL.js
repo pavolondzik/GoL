@@ -6,6 +6,11 @@ var output = document.getElementById("Output");
 var canvas = document.getElementById("Universe");
 var context = canvas.getContext("2d");
 
+ModeEnum =   {
+        RECT: 0,
+        CIRCLE: 1
+}
+
 /* Website styles */
 document.bgColor = "#C2C2A3";
 
@@ -21,10 +26,7 @@ var Graphics =
     cellSize:   10,                                 //pixels
     cellsX:     100,                                // no. of cells
     cellsY:     50,
-    ModeEnum:   {
-                RECT: 0,
-                CIRCLE: 1
-    },
+    displayMode: ModeEnum.RECT,
 
     onColour:   'black',
     onColourCircle: 'blue',
@@ -63,22 +65,22 @@ var Graphics =
         alert("x: " + x + "  y: " + y);
     },
 
-    drawCell:   function (x, y, alive, displayMode)
+    drawCell:   function (x, y, alive)
     {
-        switch(displayMode)
+        switch(this.displayMode)
         {
-            case this.ModeEnum.RECT:
+            case ModeEnum.RECT:
                 context.beginPath();
-                context.rect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
+                context.rect(x * this.cellSize + 1, y * this.cellSize + 1, this.cellSize - 1, this.cellSize - 1);
                 context.fillStyle = (alive) ? this.onColour : this.offColour;
                 context.fill();
                 context.lineWidth = 1;
                 context.strokeStyle = this.gridColour;
                 context.stroke();
                 break;
-            case this.ModeEnum.CIRCLE:
+            case ModeEnum.CIRCLE:
                 context.beginPath();
-                context.rect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
+                context.rect(x * this.cellSize + 1, y * this.cellSize + 1, this.cellSize - 1, this.cellSize - 1);
                 context.fillStyle = this.offColour;
                 context.fill();
                 context.lineWidth = 1;
@@ -95,16 +97,17 @@ var Graphics =
         }
     },
 
-    paint: function ()
+    paint: function (displayMode)
     {
         var x,
             y;
+        this.displayMode = displayMode;
 
         for (x = 0; x < this.cellsX; x++)
         {
             for (y = 0; y < this.cellsY; y++)
             {
-                this.drawCell(x, y, random(), this.ModeEnum.RECT);
+                this.drawCell(x, y, random());
             }
         }
 
@@ -117,4 +120,4 @@ var Graphics =
 
 // Use the singleton object
 document.addEventListener("DOMContentLoaded", Graphics.init(), false);
-Graphics.paint();
+Graphics.paint(ModeEnum.CIRCLE);
