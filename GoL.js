@@ -19,13 +19,19 @@ document.bgColor = "#C2C2A3";
 /************************/
 // Objects, literal version based on http://www.phpied.com/3-ways-to-define-a-javascript-class/
 // Get the coordinates of a mouse click on Canvas in Javascript, see http://miloq.blogspot.co.uk/2011/05/coordinates-mouse-click-canvas.html
+// Some parts are taken from http://www.julianpulgarin.com/canvaslife/, https://github.com/jpulgarin/canvaslife
 // Global objects: Graphics
+
+var Point = function (x, y) {
+    this.x = x;
+    this.y = y;
+};
 
 var Graphics =
 {
-    cellSize:   10,                                 //pixels
-    cellsX:     100,                                // no. of cells
-    cellsY:     50,
+    cellSize:   new Number(10),                     //pixels
+    cellsX:     new Number(100),                    // no. of cells
+    cellsY:     new Number(50),
     displayMode: ModeEnum.RECT,
 
     onColour:   'black',
@@ -35,18 +41,58 @@ var Graphics =
     message:    new String(),
 
     /* Member functions */
-
+    /* Sets canvas backround, dimensions and event listeners. */
     init:       function ()
     {
-        canvas.style.backgroundColor = this.offColour;
-        canvas.width = this.cellsX * this.cellSize;
-        canvas.height = this.cellsY * this.cellSize;
-        canvas.addEventListener("mousedown", this.getPosition, false);
+        canvas.style.backgroundColor = Graphics.offColour;
+        canvas.width = Graphics.cellsX * Graphics.cellSize;
+        canvas.height = Graphics.cellsY * Graphics.cellSize;
+        canvas.addEventListener("mousedown", Graphics.getCell, false);
     },
 
-    getPosition: function (event) {
-        var x = new Number();
-        var y = new Number();
+    /* Draws cell with selected mode. */
+    drawCell:   function (x, y, alive)
+    {
+        switch(Graphics.displayMode)
+        {
+            case ModeEnum.RECT:
+                context.beginPath();
+                context.rect(x * Graphics.cellSize + 1, y * Graphics.cellSize + 1, Graphics.cellSize - 1, Graphics.cellSize - 1);
+                context.fillStyle = (alive) ? Graphics.onColour : Graphics.offColour;
+                context.fill();
+                context.lineWidth = 1;
+                context.strokeStyle = Graphics.gridColour;
+                context.stroke();
+                break;
+            case ModeEnum.CIRCLE:
+                context.beginPath();
+                context.rect(x * Graphics.cellSize + 1, y * Graphics.cellSize + 1, Graphics.cellSize - 1, Graphics.cellSize - 1);
+                context.fillStyle = Graphics.offColour;
+                context.fill();
+                context.lineWidth = 1;
+                context.strokeStyle = Graphics.gridColour;
+                context.stroke();
+                if (alive) {
+                    context.beginPath();
+                    context.arc((x * Graphics.cellSize) + 5, (y * Graphics.cellSize) + 5, 4, 0, 2 * Math.PI);
+                    context.fillStyle = (alive) ? Graphics.onColourCircle : Graphics.offColour;
+                    context.fill();
+                    context.stroke();
+                }
+                break;
+        }
+    },
+
+    /* Returns cell co-ordinates, index starts from [0][0]. */
+    getCell: function(event)
+    {
+        var x = new Number(),
+            y = new Number(),
+            state;
+
+        if (event == undefined) {
+            return new Point(x, y);
+        }
 
         if (event.x != undefined && event.y != undefined) {
             x = event.x;
@@ -60,64 +106,213 @@ var Graphics =
                 document.documentElement.scrollTop;
         }
 
-        x -= canvas.offsetLeft;
-        y -= canvas.offsetTop;
-        alert("x: " + x + "  y: " + y);
-    },
-
-    drawCell:   function (x, y, alive)
-    {
-        switch(this.displayMode)
-        {
-            case ModeEnum.RECT:
-                context.beginPath();
-                context.rect(x * this.cellSize + 1, y * this.cellSize + 1, this.cellSize - 1, this.cellSize - 1);
-                context.fillStyle = (alive) ? this.onColour : this.offColour;
-                context.fill();
-                context.lineWidth = 1;
-                context.strokeStyle = this.gridColour;
-                context.stroke();
-                break;
-            case ModeEnum.CIRCLE:
-                context.beginPath();
-                context.rect(x * this.cellSize + 1, y * this.cellSize + 1, this.cellSize - 1, this.cellSize - 1);
-                context.fillStyle = this.offColour;
-                context.fill();
-                context.lineWidth = 1;
-                context.strokeStyle = this.gridColour;
-                context.stroke();
-                if (alive) {
-                    context.beginPath();
-                    context.arc((x * this.cellSize) + 5, (y * this.cellSize) + 5, 3, 0, 2 * Math.PI);
-                    context.fillStyle = (alive) ? this.onColourCircle : this.offColour;
-                    context.fill();
-                    context.stroke();
-                }
-                break;
+        // Get cell coordinates
+        x = Math.floor((x - canvas.offsetLeft) / Graphics.cellSize);
+        y = Math.floor((y - canvas.offsetTop) / Graphics.cellSize);
+        // If coordinates are outside the canvas
+        if (x > Graphics.cellsX - 1 || y > Graphics.cellsY - 1 || x < 0 || y < 0) {
+            return;
         }
+        if (typeof state === 'undefined') {
+            state = !Life.prevGen[x][y];
+        }
+        Life.prevGen[x][y] = state;
+        //Graphics.drawCell(x, y, state);
+        Graphics.drawCell(x, y, true);
     },
 
+    /* Draws canvas matrix, sets display mode. */
     paint: function (displayMode)
     {
         var x,
             y;
-        this.displayMode = displayMode;
+        Graphics.displayMode = displayMode;
 
-        for (x = 0; x < this.cellsX; x++)
+        for (x = 0; x < Graphics.cellsX; x++)
         {
-            for (y = 0; y < this.cellsY; y++)
+            for (y = 0; y < Graphics.cellsY; y++)
             {
-                this.drawCell(x, y, random());
+                Graphics.drawCell(x, y, Life.prevGen[x][y]);
             }
         }
 
-        this.message = "Resolution: " + canvas.width.toString() + "x" + canvas.height.toString() + ", ";
-        this.message += "Cells: " + this.cellsX + "x" + this.cellsY;
-        output.innerHTML = this.message;
+        Graphics.message = "[Paint] Resolution: " + canvas.width.toString() + "x" + canvas.height.toString() + ", ";
+        Graphics.message += "Cells: " + Graphics.cellsX + "x" + Graphics.cellsY;
+        output.innerHTML = Graphics.message;
+    },
+
+    smartPaint:  function ()
+    {
+        var x,
+            y;
+
+        for (x = 0; x < Graphics.cellsX; x++) {
+            for (y = 0; y < Graphics.cellsY; y++) {
+                if (Life.prevGen[x][y] !== Life.nextGen[x][y]) {
+                    Graphics.drawCell(x, y, Life.nextGen[x][y]);
+                }
+            }
+        }
+
+        Graphics.message = "[smartPaint] Resolution: " + canvas.width.toString() + "x" + canvas.height.toString() + ", ";
+        Graphics.message += "Cells: " + Graphics.cellsX + "x" + Graphics.cellsY;
+        output.innerHTML = Graphics.message;
+    },
+
+    random: function () {
+        return Math.random() < 0.5 ? true : false;
+    }
+}
+
+/************ L I F E *************/
+var Life =
+{
+    prevGen:    new Array(), // previous generation
+    nextGen:    new Array(), // next generation
+    speed:      new Number(100),
+    timeout:    new Number(),
+    alive:      false,
+
+    initUniverse: function ()
+    {
+        var x = new Number();
+        var y = new Number();
+
+        document.addEventListener("DOMContentLoaded", Graphics.init(), false);
+
+        // Initialize states, previous gen. is dead (alive = false)
+        for (x = 0; x < Graphics.cellsX; x++)
+        {
+            Life.prevGen[x] = [];
+            Life.nextGen[x] = [];
+            for (y = 0; y < Graphics.cellsY; y++)
+            {
+                Life.prevGen[x][y] = false;
+            }
+        }
+
+        // Paint the Grid
+        Graphics.paint(Graphics.displayMode);
+    },
+
+    toggleLife: function ()
+    {
+        if (Life.alive)
+        {
+            Life.alive = false;
+            clearInterval(timeout);
+        }
+        else
+        {
+            Life.alive = true;
+            timeout = setInterval(Life.nextGen, Life.speed);
+        }
+    },
+
+    changeSpeed: function (faster)
+    {
+        if (faster) {
+            if (Life.speed === 0) {
+                return;
+            }
+            Life.speed -= 10;
+
+        } else {
+            if (Life.speed === 1000) {
+                return;
+            }
+            Life.speed += 10;
+        }
+
+        if (Life.alive) {
+            clearInterval(timeout);
+            timeout = setInterval(Life.nextGen, Life.speed);
+        }
+    },
+
+    neighbourCount: function (x, y)
+    {
+        var count = 0,
+            i,
+            neighbours = [
+                Life.prevGen[x][(y - 1 + Graphics.cellsY) % Graphics.cellsY],
+                Life.prevGen[(x + 1 + Graphics.cellsX) % Graphics.cellsX][(y - 1 + Graphics.cellsY) % Graphics.cellsY],
+                Life.prevGen[(x + 1 + Graphics.cellsX) % Graphics.cellsX][y],
+                Life.prevGen[(x + 1 + Graphics.cellsX) % Graphics.cellsX][(y + 1 + Graphics.cellsY) % Graphics.cellsY],
+                Life.prevGen[x][(y + 1 + Graphics.cellsY) % Graphics.cellsY],
+                Life.prevGen[(x - 1 + Graphics.cellsX) % Graphics.cellsX][(y + 1 + Graphics.cellsY) % Graphics.cellsY],
+                Life.prevGen[(x - 1 + Graphics.cellsX) % Graphics.cellsX][y],
+                Life.prevGen[(x - 1 + Graphics.cellsX) % Graphics.cellsX][(y - 1 + Graphics.cellsY) % Graphics.cellsY]
+            ];
+
+        for (i = 0; i < neighbours.length; i++) {
+            if (neighbours[i]) {
+                count++;
+            }
+        }
+
+        return count;
+    },
+
+    nextGen: function ()
+    {
+        var x,
+            y,
+            count;
+
+        for (x = 0; x < Graphics.cellsX; x++) {
+            for (y = 0; y < Graphics.cellsY; y++) {
+                Life.nextGen[x][y] = Life.prevGen[x][y];
+            }
+        }
+
+        for (x = 0; x < Graphics.cellsX; x++) {
+            for (y = 0; y < Graphics.cellsY; y++) {
+                count = Life.neighbourCount(x, y);
+
+                // Game of Life rules
+                if (Life.prevGen[x][y]) {
+                    if (count < 2 || count > 3) {
+                        Life.nextGen[x][y] = false;
+                    }
+                } else if (count === 3) {
+                    Life.nextGen[x][y] = true;
+                }
+            }
+        }
+
+        Graphics.paint(Graphics.displayMode);
+
+        for (x = 0; x < Graphics.cellsX; x++) {
+            for (y = 0; y < Graphics.cellsY; y++) {
+                Life.prevGen[x][y] = Life.nextGen[x][y];
+            }
+        }
+    },
+
+    /* Clears Universe. */
+    clearUniverse: function ()
+    {
+        var x,
+            y;
+       
+        for (x = 0; x < Graphics.cellsX; x++) {
+            for (y = 0; y < Graphics.cellsY; y++) {
+                Life.nextGen[x][y] = false;
+            }
+        }
+
+        Graphics.smartPaint();
+
+        for (x = 0; x < Graphics.cellsX; x++) {
+            for (y = 0; y < Graphics.cellsY; y++) {
+                Life.prevGen[x][y] = false;
+            }
+        }
+
+        Graphics.message = "[Paint] Resolution: " + canvas.width.toString() + "x" + canvas.height.toString() + ", ";
+        Graphics.message += "Cells: " + Graphics.cellsX + "x" + Graphics.cellsY;
+        output.innerHTML = Graphics.message;
     }
 
 }
-
-// Use the singleton object
-document.addEventListener("DOMContentLoaded", Graphics.init(), false);
-Graphics.paint(ModeEnum.CIRCLE);

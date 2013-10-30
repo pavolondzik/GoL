@@ -3,22 +3,64 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title></title>   
+        <title></title>
     </head>
     <body>
         <div id="Container">
-            <header id="Header"></header>
+            <header id="Header">JQuery tabs for settings</header>
+            <div id="Task">
+                <button id="start" type="button" >Start Life</button>
+                <output id="Output"></output>
+                <button id="minus" type="button" >-</button>
+                Speed: <span id="speed">90</span>/100
+                <button id="plus" type="button" >+</button>
+                <button id="nextGen" type="button" >Next Generation</button>
+                <button id="clear" type="button" >Clear</button>
+            </div>
             <div id="Solution">
                 <canvas id="Universe">
                     <strong>Your browser does not support canvas. You should probably upgrade and come back.</strong>
                 </canvas>
             </div>
-            <div id="Task">
-                <button id="start" type="button" onclick="life.toggleLife();">Start Life</button>
-                <output id="Output"></output>
-            </div>
         </div>
-        <script src ="Helpers.js" ></script>
         <script src ="GoL.js" ></script>
+                <script >
+                    Life.initUniverse();
+
+                    var start_value = 'Start Life';
+                    var stop_value = 'Stop Life';
+                    var startButton = document.getElementById('start');
+                    var minusButton = document.getElementById('minus');
+                    var plusButton = document.getElementById('plus');
+                    var nextGenButton = document.getElementById('nextGen');
+                    var clearUniverseButton = document.getElementById('clear');
+
+                    startButton.onclick = function () {
+                        if (startButton.innerHTML === start_value) {
+                            startButton.innerHTML = stop_value;
+                        } else {
+                            startButton.innerHTML = start_value;
+                        }
+                        Life.toggleLife();
+                    };
+
+                    minusButton.onclick = function () {
+                        Life.changeSpeed(false);
+                        document.getElementById('speed').innerHTML = 100 - (Life.speed / 10);
+                    };
+
+                    plusButton.onclick = function () {
+                        Life.changeSpeed(true);
+                        document.getElementById('speed').innerHTML = 100 - (Life.speed / 10);
+                    };
+
+                    nextGenButton.onclick = function () {
+                        Life.nextGen();
+                    };
+
+                    clearUniverseButton.onclick = function () {
+                        Life.clearUniverse();
+                    };
+        </script> 
     </body>
 </html>
