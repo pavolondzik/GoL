@@ -1,0 +1,48 @@
+﻿body {
+    background-color: #F8F8FF; /* http://en.wikipedia.org/wiki/Shades_of_white#Ghost_white */
+    font-family: "Trebuchet MS" , "Helvetica" , "Arial" , "Verdana" , "sans-serif";
+    font-size: 62.5%;
+}
+
+canvas {
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+header {
+    margin-bottom:10px;
+}
+
+.tab {
+    height:100px;
+}
+
+.container {
+    background: #eee;
+    border: 1px solid #000;
+    color: #333;
+    float: left;
+    height: auto;
+    margin-left: 5px;
+	padding: 1em;
+    text-align:left;
+    width: auto;
+    
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
+/* Gradient transparent - color - transparent */	
+/* http://css-tricks.com/simple-styles-for-horizontal-rules/ */	
+div.container hr {
+    border: 0;
+    height: 1px;
+    background-image: -webkit-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
+    background-image:    -moz-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
+    background-image:     -ms-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
+    background-image:      -o-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
+}

@@ -3,64 +3,76 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title></title>
+        <title>Game of Life</title>
+        <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+        <link href="Content/overcast/jquery-ui-1.10.3.custom.css" rel="stylesheet">
+        <script src="Scripts/jquery-1.9.1.js"></script>
+        <script src="Scripts/jquery-ui-1.10.3.custom.js"></script>
+        <script>
+            $(function () {
+                $("#tabs").tabs();
+            });
+        </script>
+        <link rel="stylesheet" href="Content/Style.css" />
     </head>
     <body>
         <div id="Container">
-            <header id="Header">JQuery tabs for settings</header>
-            <div id="Task">
-                <button id="start" type="button" >Start Life</button>
-                <output id="Output"></output>
-                <button id="minus" type="button" >-</button>
-                Speed: <span id="speed">90</span>/100
-                <button id="plus" type="button" >+</button>
-                <button id="nextGen" type="button" >Next Generation</button>
-                <button id="clear" type="button" >Clear</button>
-            </div>
+            <header id="Header">
+                <div id="tabs">
+                  <ul>
+                    <li><a href="#tabs-1">Life / Generation</a></li>
+                    <li><a href="#tabs-2">Graphics</a></li>
+                    <li><a href="#tabs-3">Task</a></li>
+                  </ul>
+                  <div id="tabs-1" class="tab">
+                    <div class="container">
+                        <button id="start" type="button" >Start Life</button>
+                        <button id="prevGen" type="button" >&lt; Previous Generation</button>
+                        <button id="nextGen" type="button" >Next Generation &gt;</button>
+                        <button id="clear" type="button" >Clear</button>
+                        <hr /><span>Controls</span>
+                    </div>  
+                    <div class="container">    
+                        <button id="minus" type="button" >-</button>
+                        Speed: <span id="speed">90</span>/100
+                        <button id="plus" type="button" >+</button>
+                        <hr /><span>Speed</span>
+                    </div>
+                  </div>
+                  <div id="tabs-2" class="tab">
+                    <div class="container">
+                        <label for="automatic">Automatic: </label>
+                        <input name="automatic" value="automatic" type="checkbox" >
+                        <label for="spinnerX">Cells X:</label>
+                        <input id="spinnerX" name="value" />
+                        <label for="spinnerY">Cells Y:</label>
+                        <input id="spinnerY" name="value" />
+                        <hr /><span>Size</span>
+                    </div>
+                    <div class="container">
+                        Change Mode:
+                        <select id="displayMode">
+                            <option value="RECT">Rectangle</option>
+                            <option value="CIRCLE">Circle</option>
+                        </select>
+                        <hr /><span>Display Mode</span>
+                    </div>
+                  </div>
+                  <div id="tabs-3" class="tab">
+                    <section>
+                        <h3>Emergence: Cellular Automata</h3>
+                        <p>Create an interactive implementation of the Game of Life grid, where a player can select starting points for a variety of blinkers. The system then sends gliders to destroy them, resulting in chaos. Alternatively, system randomly sets some blinkers and player sets starting point for gliders. Documentation should clearly explain algorithms used to generate the life-forms.</p>
+                    </section>
+                  </div>
+               </div>
+            </header>
             <div id="Solution">
                 <canvas id="Universe">
                     <strong>Your browser does not support canvas. You should probably upgrade and come back.</strong>
                 </canvas>
             </div>
         </div>
-        <script src ="GoL.js" ></script>
-                <script >
-                    Life.initUniverse();
-
-                    var start_value = 'Start Life';
-                    var stop_value = 'Stop Life';
-                    var startButton = document.getElementById('start');
-                    var minusButton = document.getElementById('minus');
-                    var plusButton = document.getElementById('plus');
-                    var nextGenButton = document.getElementById('nextGen');
-                    var clearUniverseButton = document.getElementById('clear');
-
-                    startButton.onclick = function () {
-                        if (startButton.innerHTML === start_value) {
-                            startButton.innerHTML = stop_value;
-                        } else {
-                            startButton.innerHTML = start_value;
-                        }
-                        Life.toggleLife();
-                    };
-
-                    minusButton.onclick = function () {
-                        Life.changeSpeed(false);
-                        document.getElementById('speed').innerHTML = 100 - (Life.speed / 10);
-                    };
-
-                    plusButton.onclick = function () {
-                        Life.changeSpeed(true);
-                        document.getElementById('speed').innerHTML = 100 - (Life.speed / 10);
-                    };
-
-                    nextGenButton.onclick = function () {
-                        Life.nextGen();
-                    };
-
-                    clearUniverseButton.onclick = function () {
-                        Life.clearUniverse();
-                    };
-        </script> 
+        <script src = "Scripts/GoL.js" ></script>
+        <script src = "Scripts/Controls.js"></script> 
     </body>
 </html>

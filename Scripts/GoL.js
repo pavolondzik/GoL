@@ -1,19 +1,3 @@
-/* (Global) Variables */
-
-var solution = document.getElementById("Solution");
-var output = document.getElementById("Output");
-
-var canvas = document.getElementById("Universe");
-var context = canvas.getContext("2d");
-
-ModeEnum =   {
-        RECT: 0,
-        CIRCLE: 1
-}
-
-/* Website styles */
-document.bgColor = "#C2C2A3";
-
 /************************/
 /* Solution of the task */
 /************************/
@@ -22,31 +6,37 @@ document.bgColor = "#C2C2A3";
 // Some parts are taken from http://www.julianpulgarin.com/canvaslife/, https://github.com/jpulgarin/canvaslife
 // Global objects: Graphics
 
-var Point = function (x, y) {
-    this.x = x;
-    this.y = y;
-};
+/* (Global) Variables */
+
+var output = document.getElementById("Output");
+
+var canvas = document.getElementById("Universe");
+var context = canvas.getContext("2d");
+
+/* Enumerations have to be in the same order as select list options. */
+ModeEnum = {
+    RECT: 0,
+    CIRCLE: 1
+}
+
+/************ G R A P H I C S *************/
 
 var Graphics =
 {
-    cellSize:   new Number(10),                     //pixels
-    cellsX:     new Number(100),                    // no. of cells
-    cellsY:     new Number(50),
+    cellSize:    new Number(10),                     //pixels
     displayMode: ModeEnum.RECT,
 
-    onColour:   'black',
+    onColour:       'black',
     onColourCircle: 'blue',
-    offColour:  'white',
-    gridColour: 'rgb(50, 50, 50)',                  //dark grey
-    message:    new String(),
+    offColour:      'white',
+    gridColour:     'rgb(50, 50, 50)',                  //dark grey
 
-    /* Member functions */
     /* Sets canvas backround, dimensions and event listeners. */
     init:       function ()
     {
         canvas.style.backgroundColor = Graphics.offColour;
-        canvas.width = Graphics.cellsX * Graphics.cellSize;
-        canvas.height = Graphics.cellsY * Graphics.cellSize;
+        canvas.width = Life.cellsX * Graphics.cellSize;
+        canvas.height = Life.cellsY * Graphics.cellSize;
         canvas.addEventListener("mousedown", Graphics.getCell, false);
     },
 
@@ -91,7 +81,7 @@ var Graphics =
             state;
 
         if (event == undefined) {
-            return new Point(x, y);
+            return;
         }
 
         if (event.x != undefined && event.y != undefined) {
@@ -110,55 +100,56 @@ var Graphics =
         x = Math.floor((x - canvas.offsetLeft) / Graphics.cellSize);
         y = Math.floor((y - canvas.offsetTop) / Graphics.cellSize);
         // If coordinates are outside the canvas
-        if (x > Graphics.cellsX - 1 || y > Graphics.cellsY - 1 || x < 0 || y < 0) {
+        if (x > Life.cellsX - 1 || y > Life.cellsY - 1 || x < 0 || y < 0) {
             return;
         }
-        if (typeof state === 'undefined') {
-            state = !Life.prevGen[x][y];
-        }
-        Life.prevGen[x][y] = state;
-        //Graphics.drawCell(x, y, state);
-        Graphics.drawCell(x, y, true);
+
+        // Save cell's changed state
+        Life.prevGen[x][y] = !Life.prevGen[x][y];
+        // Draw cell
+        Graphics.drawCell(x, y, Life.prevGen[x][y]);
     },
 
-    /* Draws canvas matrix, sets display mode. */
-    paint: function (displayMode)
+    /* Draws canvas matrix. */
+    paint: function ()
     {
         var x,
             y;
-        Graphics.displayMode = displayMode;
 
-        for (x = 0; x < Graphics.cellsX; x++)
+        for (x = 0; x < Life.cellsX; x++)
         {
-            for (y = 0; y < Graphics.cellsY; y++)
+            for (y = 0; y < Life.cellsY; y++)
             {
                 Graphics.drawCell(x, y, Life.prevGen[x][y]);
             }
         }
-
-        Graphics.message = "[Paint] Resolution: " + canvas.width.toString() + "x" + canvas.height.toString() + ", ";
-        Graphics.message += "Cells: " + Graphics.cellsX + "x" + Graphics.cellsY;
-        output.innerHTML = Graphics.message;
     },
 
-    smartPaint:  function ()
+    /* Draws canvas matrix. */
+    smartPaint: function ()
     {
         var x,
             y;
 
-        for (x = 0; x < Graphics.cellsX; x++) {
-            for (y = 0; y < Graphics.cellsY; y++) {
+        for (x = 0; x < Life.cellsX; x++) {
+            for (y = 0; y < Life.cellsY; y++) {
                 if (Life.prevGen[x][y] !== Life.nextGen[x][y]) {
                     Graphics.drawCell(x, y, Life.nextGen[x][y]);
                 }
             }
         }
-
-        Graphics.message = "[smartPaint] Resolution: " + canvas.width.toString() + "x" + canvas.height.toString() + ", ";
-        Graphics.message += "Cells: " + Graphics.cellsX + "x" + Graphics.cellsY;
-        output.innerHTML = Graphics.message;
     },
 
+    /* Changes display mode of the cell. */
+    changeMode: function(displayMode)
+    {
+        Graphics.displayMode = displayMode;
+
+        // Re-draw canvas
+        Graphics.paint();
+    },
+
+    /* Generates random number. */
     random: function () {
         return Math.random() < 0.5 ? true : false;
     }
@@ -167,34 +158,42 @@ var Graphics =
 /************ L I F E *************/
 var Life =
 {
-    prevGen:    new Array(), // previous generation
-    nextGen:    new Array(), // next generation
+    prevGen:    new Array(),    // previous generation, holds status (live/dead) for each cell in the grid
+    nextGen:    new Array(),    // next generation
     speed:      new Number(100),
     timeout:    new Number(),
     alive:      false,
+    cellsX:     new Number(20), // no. of cells
+    cellsY:     new Number(20),
 
-    initUniverse: function ()
+    /* Sets matrix(universe) states and draws canvas matrix. */
+    initUniverse: function (cellsX, cellsY)
     {
+        Life.cellsX = cellsX;
+        Life.cellsY = cellsY;
+
         var x = new Number();
         var y = new Number();
 
         document.addEventListener("DOMContentLoaded", Graphics.init(), false);
 
-        // Initialize states, previous gen. is dead (alive = false)
-        for (x = 0; x < Graphics.cellsX; x++)
+        // Initialize states
+        for (x = 0; x < Life.cellsX; x++)
         {
             Life.prevGen[x] = [];
             Life.nextGen[x] = [];
-            for (y = 0; y < Graphics.cellsY; y++)
+            for (y = 0; y < Life.cellsY; y++)
             {
                 Life.prevGen[x][y] = false;
+                Life.nextGen[x][y] = false;
             }
         }
 
         // Paint the Grid
-        Graphics.paint(Graphics.displayMode);
+        Graphics.paint();
     },
 
+    /* Turns on / off the game. */
     toggleLife: function ()
     {
         if (Life.alive)
@@ -230,21 +229,23 @@ var Life =
         }
     },
 
+    /* Counts number of alive adjacent cells. */
     neighbourCount: function (x, y)
     {
         var count = 0,
             i,
             neighbours = [
-                Life.prevGen[x][(y - 1 + Graphics.cellsY) % Graphics.cellsY],
-                Life.prevGen[(x + 1 + Graphics.cellsX) % Graphics.cellsX][(y - 1 + Graphics.cellsY) % Graphics.cellsY],
-                Life.prevGen[(x + 1 + Graphics.cellsX) % Graphics.cellsX][y],
-                Life.prevGen[(x + 1 + Graphics.cellsX) % Graphics.cellsX][(y + 1 + Graphics.cellsY) % Graphics.cellsY],
-                Life.prevGen[x][(y + 1 + Graphics.cellsY) % Graphics.cellsY],
-                Life.prevGen[(x - 1 + Graphics.cellsX) % Graphics.cellsX][(y + 1 + Graphics.cellsY) % Graphics.cellsY],
-                Life.prevGen[(x - 1 + Graphics.cellsX) % Graphics.cellsX][y],
-                Life.prevGen[(x - 1 + Graphics.cellsX) % Graphics.cellsX][(y - 1 + Graphics.cellsY) % Graphics.cellsY]
+                Life.prevGen[x][(y - 1 + Life.cellsY) % Life.cellsY],
+                Life.prevGen[(x + 1 + Life.cellsX) % Life.cellsX][(y - 1 + Life.cellsY) % Life.cellsY],
+                Life.prevGen[(x + 1 + Life.cellsX) % Life.cellsX][y],
+                Life.prevGen[(x + 1 + Life.cellsX) % Life.cellsX][(y + 1 + Life.cellsY) % Life.cellsY],
+                Life.prevGen[x][(y + 1 + Life.cellsY) % Life.cellsY],
+                Life.prevGen[(x - 1 + Life.cellsX) % Life.cellsX][(y + 1 + Life.cellsY) % Life.cellsY],
+                Life.prevGen[(x - 1 + Life.cellsX) % Life.cellsX][y],
+                Life.prevGen[(x - 1 + Life.cellsX) % Life.cellsX][(y - 1 + Life.cellsY) % Life.cellsY]
             ];
 
+        // If neighbour alive (true), add him up
         for (i = 0; i < neighbours.length; i++) {
             if (neighbours[i]) {
                 count++;
@@ -254,37 +255,46 @@ var Life =
         return count;
     },
 
+    /* Produces next state. */
     nextGen: function ()
     {
         var x,
             y,
             count;
 
-        for (x = 0; x < Graphics.cellsX; x++) {
-            for (y = 0; y < Graphics.cellsY; y++) {
+        for (x = 0; x < Life.cellsX; x++)
+        {
+            for (y = 0; y < Life.cellsY; y++)
+            {
                 Life.nextGen[x][y] = Life.prevGen[x][y];
             }
         }
 
-        for (x = 0; x < Graphics.cellsX; x++) {
-            for (y = 0; y < Graphics.cellsY; y++) {
+        for (x = 0; x < Life.cellsX; x++)
+        {
+            for (y = 0; y < Life.cellsY; y++)
+            {
                 count = Life.neighbourCount(x, y);
 
                 // Game of Life rules
-                if (Life.prevGen[x][y]) {
-                    if (count < 2 || count > 3) {
+                if (Life.prevGen[x][y])                // A live cell with two or three live neighbors stays alive (survival)
+                {
+                    if (count < 2 || count > 3)         // (live cell dies if no. of neighbours is not 2 or 3)
+                    {
                         Life.nextGen[x][y] = false;
                     }
-                } else if (count === 3) {
-                    Life.nextGen[x][y] = true;
+                } else if (count === 3) {               // A dead cell with exactly three live neighbors becomes a live cell (birth).
+                    Life.nextGen[x][y] = true;          // (dead cell stays dead cell)
                 }
             }
         }
 
-        Graphics.paint(Graphics.displayMode);
+        Graphics.smartPaint();
 
-        for (x = 0; x < Graphics.cellsX; x++) {
-            for (y = 0; y < Graphics.cellsY; y++) {
+        for (x = 0; x < Life.cellsX; x++)
+        {
+            for (y = 0; y < Life.cellsY; y++)
+            {
                 Life.prevGen[x][y] = Life.nextGen[x][y];
             }
         }
@@ -296,23 +306,18 @@ var Life =
         var x,
             y;
        
-        for (x = 0; x < Graphics.cellsX; x++) {
-            for (y = 0; y < Graphics.cellsY; y++) {
+        for (x = 0; x < Life.cellsX; x++)
+        {
+            for (y = 0; y < Life.cellsY; y++)
+            {
                 Life.nextGen[x][y] = false;
-            }
-        }
-
-        Graphics.smartPaint();
-
-        for (x = 0; x < Graphics.cellsX; x++) {
-            for (y = 0; y < Graphics.cellsY; y++) {
+                if (Life.prevGen[x][y] !== Life.nextGen[x][y])
+                {
+                    Graphics.drawCell(x, y, Life.nextGen[x][y]);
+                }
                 Life.prevGen[x][y] = false;
             }
         }
-
-        Graphics.message = "[Paint] Resolution: " + canvas.width.toString() + "x" + canvas.height.toString() + ", ";
-        Graphics.message += "Cells: " + Graphics.cellsX + "x" + Graphics.cellsY;
-        output.innerHTML = Graphics.message;
     }
 
 }
