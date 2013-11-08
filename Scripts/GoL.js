@@ -29,7 +29,7 @@ var Graphics =
     onColour:       'black',
     onColourCircle: 'blue',
     offColour:      'white',
-    gridColour:     'rgb(50, 50, 50)',                  //dark grey
+    trailColour:    'rgb(50, 50, 50)',              //dark grey
 
     /* Sets canvas backround, dimensions and event listeners. */
     init:       function ()
@@ -51,7 +51,7 @@ var Graphics =
                 context.fillStyle = (alive) ? Graphics.onColour : Graphics.offColour;
                 context.fill();
                 context.lineWidth = 1;
-                context.strokeStyle = Graphics.gridColour;
+                context.strokeStyle = Graphics.onColour;
                 context.stroke();
                 break;
             case ModeEnum.CIRCLE:
@@ -60,7 +60,7 @@ var Graphics =
                 context.fillStyle = Graphics.offColour;
                 context.fill();
                 context.lineWidth = 1;
-                context.strokeStyle = Graphics.gridColour;
+                context.strokeStyle = Graphics.onColour;
                 context.stroke();
                 if (alive) {
                     context.beginPath();
@@ -199,12 +199,12 @@ var Life =
         if (Life.alive)
         {
             Life.alive = false;
-            clearInterval(timeout);
+            clearInterval(Life.timeout);
         }
         else
         {
             Life.alive = true;
-            timeout = setInterval(Life.nextGen, Life.speed);
+            Life.timeout = setInterval(Life.nextGen, Life.speed);
         }
     },
 
@@ -224,8 +224,8 @@ var Life =
         }
 
         if (Life.alive) {
-            clearInterval(timeout);
-            timeout = setInterval(Life.nextGen, Life.speed);
+            clearInterval(Life.timeout);
+            Life.timeout = setInterval(Life.nextGen, Life.speed);
         }
     },
 
@@ -299,6 +299,65 @@ var Life =
             }
         }
     },
+
+    // Parses files in Run Length Encoded Format
+    // http://www.conwaylife.com/wiki/RLE
+    loadPattern:   function (url) {
+        var padding = 30;
+
+        $.ajax({
+            url: url,
+            success: function (data) {
+                var match = data.match(/x\s=\s(\d*).*?y\s=\s(\d*).*\r([^]*)!/),
+                    x = parseInt(match[1], 10),
+                    pattern = match[3].replace(/\s+/g, ""), // remove whitespace
+                    lines = pattern.split('$'),
+                    offset = 0,
+                    i,
+                    line,
+                    length,
+                    j,
+                    y = padding - 1;
+
+                $(canvas).attr('height', Graphics.cellSize * (y + 1 + (padding * 2)));
+                $(canvas).attr('width', Graphics.cellSize * (x + 1 + (padding * 2)));
+                $(canvas).unbind('mousedown');
+                Life.initUniverse();
+
+                for (i = 0; i < lines.length; i++) {
+                    y++;
+                    x = padding;
+                    line = lines[i];
+                    while (line) {
+                        if (line.charAt(0) === 'o' || line.charAt(0) === 'b') {
+                            if (line.charAt(0) === 'o') {
+                                Life.prev[x][y] = true;
+                                Graphics.drawCell(x, y, true);
+                            }
+                            x++;
+                            line = line.substring(1);
+                        } else {
+                            length = line.match(/(\d*)/)[1];
+                            line = line.substring(length.length);
+                            length = parseInt(length, 10);
+                            if (!line) {
+                                y += length - 1;
+                                break;
+                            }
+                            if (line.charAt(0) === 'o') {
+                                for (j = 0; j < length; j++) {
+                                    Life.prevGen[x + j][y] = true;
+                                    Graphics.drawCell(x + j, y, true);
+                                }
+                            }
+                            x += length;
+                            line = line.substring(1);
+                        }
+                    }
+                }
+            }
+        });
+        },
 
     /* Clears Universe. */
     clearUniverse: function ()

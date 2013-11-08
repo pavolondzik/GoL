@@ -17,10 +17,10 @@ header {
 }
 
 .tab {
-    height:100px;
+    height:80px;
 }
 
-.container {
+.buttonGroup {
     background: #eee;
     border: 1px solid #000;
     color: #333;

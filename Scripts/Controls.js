@@ -3,7 +3,11 @@ var cellsX;
 var cellsY;
 
 $('document').ready(function () {
-
+    
+    // Creating tabs
+    $("#tabs").tabs();
+    
+    // Setting Universe dimensions
     var spinnerX = $("#spinnerX").spinner();
     var spinnerY = $("#spinnerY").spinner();
 
@@ -14,6 +18,16 @@ $('document').ready(function () {
     cellsY = spinnerY.spinner('value');
 
     Life.initUniverse(cellsX, cellsY);
+
+    $('#patterns').change(function () {
+        $('#patterns option:selected').each(function () {
+            url = $(this).val();
+            if (url) {
+                Life.loadPattern(url);
+            }
+        });
+    });
+
 });
 
 $("#spinnerX").spinner({
