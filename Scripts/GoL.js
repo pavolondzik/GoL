@@ -23,13 +23,14 @@ ModeEnum = {
 
 var Graphics =
 {
-    cellSize:    new Number(10),                     //pixels
+    cellSize:    new Number(10),            //pixels
     displayMode: ModeEnum.RECT,
 
     onColour:       'black',
     onColourCircle: 'blue',
     offColour:      'white',
-    trailColour:    'rgb(50, 50, 50)',              //dark grey
+    middle:         'rgb(0, 255, 255)',     // cyan
+    trailColour:    'rgb(50, 50, 50)',      //dark grey
 
     /* Sets canvas backround, dimensions and event listeners. */
     init:       function ()
@@ -43,6 +44,9 @@ var Graphics =
     /* Draws cell with selected mode. */
     drawCell:   function (x, y, alive)
     {
+        var isMiddleX = false;
+        var isMiddleY = false;
+
         switch(Graphics.displayMode)
         {
             case ModeEnum.RECT:
@@ -51,7 +55,27 @@ var Graphics =
                 context.fillStyle = (alive) ? Graphics.onColour : Graphics.offColour;
                 context.fill();
                 context.lineWidth = 1;
-                context.strokeStyle = Graphics.onColour;
+                // Find middle coordinates
+                if ((Life.cellsX % 2) === 0) {
+                    if ((x === (Life.cellsX / 2)) || (x === ((Life.cellsX / 2) - 1)))
+                        isMiddleX = true;
+                    else isMiddleX = false;
+                }
+                else {
+                    if (x === Math.floor(Life.cellsX / 2)) isMiddleX = true;
+                    else isMiddleX = false;
+                }
+                if ((Life.cellsY % 2) === 0) {
+                    if ((y === (Life.cellsY / 2)) || (y === ((Life.cellsY / 2) - 1)))
+                        isMiddleY = true;
+                    else isMiddleY = false;
+                }
+                else {
+                    if (y === Math.floor(Life.cellsY / 2)) isMiddleY = true;
+                    else isMiddleY = false;
+                }
+                if (isMiddleX && isMiddleY) context.strokeStyle = Graphics.middle;
+                else context.strokeStyle = Graphics.onColour;
                 context.stroke();
                 break;
             case ModeEnum.CIRCLE:
@@ -60,7 +84,27 @@ var Graphics =
                 context.fillStyle = Graphics.offColour;
                 context.fill();
                 context.lineWidth = 1;
-                context.strokeStyle = Graphics.onColour;
+                // Find middle coordinates
+                if ((Life.cellsX % 2) === 0) {
+                    if ((x === (Life.cellsX / 2)) || (x === ((Life.cellsX / 2) - 1)))
+                        isMiddleX = true;
+                    else isMiddleX = false;
+                }
+                else {
+                    if (x === Math.floor(Life.cellsX / 2)) isMiddleX = true;
+                    else isMiddleX = false;
+                }
+                if ((Life.cellsY % 2) === 0) {
+                    if ((y === (Life.cellsY / 2)) || (y === ((Life.cellsY / 2) - 1)))
+                        isMiddleY = true;
+                    else isMiddleY = false;
+                }
+                else {
+                    if (y === Math.floor(Life.cellsY / 2)) isMiddleY = true;
+                    else isMiddleY = false;
+                }
+                if (isMiddleX && isMiddleY) context.strokeStyle = Graphics.middle;
+                else context.strokeStyle = Graphics.onColour;
                 context.stroke();
                 if (alive) {
                     context.beginPath();
@@ -303,35 +347,57 @@ var Life =
     // Parses files in Run Length Encoded Format
     // http://www.conwaylife.com/wiki/RLE
     loadPattern:   function (url) {
-        var padding = 30;
+        var g = Graphics,
+            l = Life;
 
         $.ajax({
             url: url,
             success: function (data) {
                 var match = data.match(/x\s=\s(\d*).*?y\s=\s(\d*).*\r([^]*)!/),
-                    x = parseInt(match[1], 10),
-                    pattern = match[3].replace(/\s+/g, ""), // remove whitespace
+                    x,
+                    y,
+                    xPattern = parseInt(match[1], 10),      // Pattern dimensions
+                    yPattern = parseInt(match[2], 10),
+                    pattern = match[3].replace(/\s+/g, ""), // Remove whitespace
                     lines = pattern.split('$'),
-                    offset = 0,
                     i,
+                    j,
                     line,
                     length,
-                    j,
-                    y = padding - 1;
+                    cellsX,                                 // Canvas dimensions
+                    cellsY,
+                    spinnerX = $("#spinnerX").spinner(),
+                    spinnerY = $("#spinnerY").spinner();
+                
+                // Setting size of the canvas
+                if (spinnerX.spinner('value') > xPattern)
+                    cellsX = spinnerX.spinner('value');
+                else
+                    cellsX = xPattern;
+                if (spinnerY.spinner('value') > yPattern)
+                    cellsY = spinnerY.spinner('value');
+                else
+                    cellsY = yPattern;
 
-                $(canvas).attr('height', Graphics.cellSize * (y + 1 + (padding * 2)));
-                $(canvas).attr('width', Graphics.cellSize * (x + 1 + (padding * 2)));
-                $(canvas).unbind('mousedown');
-                Life.initUniverse();
+                Life.initUniverse(cellsX, cellsY);
+
+                // For too big canvas size, the canvas will become scrollable
+                if ((cellsX > screen.availWidth) || (cellsY > screen.availWidth))
+                    canvas.style.overflow = 'scroll';
+
+                // Move pattern to the middle of the screen (subtracting pattern dimension)
+                // minus one because array index starts from 0
+                x = Math.floor(Life.cellsX / 2) - Math.floor(xPattern / 2) -1;
+                y = Math.floor(Life.cellsY / 2) - Math.floor(yPattern / 2) -1;
 
                 for (i = 0; i < lines.length; i++) {
                     y++;
-                    x = padding;
+                    x = Math.floor(Life.cellsX / 2) - Math.floor(xPattern/2) -1;
                     line = lines[i];
                     while (line) {
                         if (line.charAt(0) === 'o' || line.charAt(0) === 'b') {
                             if (line.charAt(0) === 'o') {
-                                Life.prev[x][y] = true;
+                                Life.prevGen[x][y] = true;
                                 Graphics.drawCell(x, y, true);
                             }
                             x++;
@@ -358,7 +424,7 @@ var Life =
             }
         });
         },
-
+        
     /* Clears Universe. */
     clearUniverse: function ()
     {
