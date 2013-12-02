@@ -52,6 +52,7 @@ var plusButton = document.getElementById('plus');
 var nextGenButton = document.getElementById('nextGen');
 var clearUniverseButton = document.getElementById('clear');
 var displayModeSelect = document.getElementById('displayMode');
+var automaticRadioButton = document.getElementById("automaticRadioBtn");
 
 startButton.onclick = function () {
     if (startButton.innerHTML === start_value) {
@@ -91,9 +92,33 @@ displayModeSelect.onchange = function () {
         case 'CIRCLE':
             mode = ModeEnum.CIRCLE;
             break;
+        case 'TRAIL':
+            mode = ModeEnum.TRAIL;
+            break;
+        case 'TRAILNOGRID':
+            mode = ModeEnum.TRAIL_NO_GRID;
+            break;
         default:
             mode = ModeEnum.RECT;
             break;
     }
     Graphics.changeMode(mode);
 };
+
+var previouslyChecked = false;
+$(":radio").bind("change", function (event) {
+    if (automaticRadioButton.checked) {
+        Graphics.randomPaint();
+        // Listen to user's click
+        canvas.removeEventListener("mousedown", Graphics.getCell, false);
+        canvas.addEventListener("mousedown", Graphics.getStartingPoint, false);
+        previouslyChecked = true;
+    }
+    else {
+        if (previouslyChecked) {
+            canvas.removeEventListener("mousedown", Graphics.getStartingPoint, false);
+            canvas.addEventListener("mousedown", Graphics.getCell, false);
+            previouslyChecked = false;
+        }
+    }
+});
