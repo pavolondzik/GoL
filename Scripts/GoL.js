@@ -157,11 +157,14 @@ var Graphics =
         }
     },
 
-    drawCentrePoint:   function (x, y)
+    drawCentrePoint:   function (x, y, alive)
     {
         context.beginPath();
         context.rect(x * Graphics.cellSize + 1, y * Graphics.cellSize + 1, Graphics.cellSize - 1, Graphics.cellSize - 1);
-        context.fillStyle = Graphics.aliveCentrePointCoulour;
+        if (alive) {
+            context.fillStyle = Graphics.aliveCentrePointCoulour;
+        }
+        else context.fillStyle = Graphics.deadCellColour;
         context.fill();
         context.lineWidth = 1;
         // Find middle coordinates
@@ -171,6 +174,7 @@ var Graphics =
     },
 
     /* Returns cell co-ordinates, index starts from [0][0]. */
+    /* Returns empty array if coordinates are from outside of canvas. */
     getCoordinates: function(event)
     {
         var x = new Number(),
@@ -234,10 +238,10 @@ var Graphics =
         Life.startingPointForGliders[1] = y;
 
         // Add cell's changed state to previous generation
-        Life.prevGen[x][y] = true;
+        Life.prevGen[x][y] = !Life.prevGen[x][y];
 
         // Draw cell in trailing mode
-        Graphics.drawCentrePoint(x, y);
+        Graphics.drawCentrePoint(x, y, Life.prevGen[x][y]);
     },
 
     /* Draws canvas matrix. */
@@ -250,7 +254,7 @@ var Graphics =
         {
             for (y = 0; y < Life.cellsY; y++)
             {
-                Graphics.drawCell(x, y, Life.prevGen[x][y], false);
+                Graphics.drawCell(x, y, Life.nextGen[x][y], false);
             }
         }
     },
@@ -377,7 +381,7 @@ var Life =
     xLowerRight: new Number(0),
     yLowerRight: new Number(0),
     lifeExists: false,
-    startingPointForGliders: new Array(-1,-1),
+    startingPointForGliders: new Array(),
 
     /* Sets matrix(universe) states and draws canvas matrix. */
     initUniverse: function (cellsX, cellsY)
@@ -483,6 +487,9 @@ var Life =
     */
     userSelection: function ()
     {
+        // Update generation count
+        stats.innerHTML = Life.generation;
+
         // Check if Universe has at least one alive cell
         loop:
             {
@@ -527,9 +534,6 @@ var Life =
             Life.nextGen[Life.xLowerRight + 1][Life.yLowerRight + 2] = true;
         }
 
-        // Update generation count
-        stats.innerHTML = Life.generation;
-
         Life.lifeExists = false;
         return;
     },
@@ -537,30 +541,46 @@ var Life =
     automaticSelection: function()
     {
         var i,
-            j;
-
-        // Get starting point
-        var x = Life.startingPointForGliders[0];
-        var y = Life.startingPointForGliders[1];
-
-        // Find (detect) live clusters //
-        // count number of vertices in cyclic graph
-        for (i = x - 1; i < 3; i++) {
-            for (j = y - 1; j < 3; j++) {
-                if (i == x && j == y) continue;
-                //if(prevGen[i][j])
-            }
-        }
-
-        // Find the biggest cluster
-
-
-        // Send gliders with the right rotation towards the cluster
-        var glider = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 2]];
-        //nextGen ...replace the starting point with glider
+            j,
+            count = 0,
+            countFlag = false;
 
         // Update generation count
         stats.innerHTML = Life.generation;
+
+        // Get starting point
+        if (Life.startingPointForGliders.length != 2) return;
+        var x = Life.startingPointForGliders[0];
+        var y = Life.startingPointForGliders[1];
+
+        // Detect alive neigbours
+        for (i = x - 1; i < 3; i++) {
+            for (j = y - 1; j < 3; j++) {
+                if (i == x && j == y) continue;
+                if(!nextGen[i][j])
+                    count++
+            }
+        }
+        // if all neighbours are dead, we can draw glider
+        if (count == 0)
+            countFlag = true;
+
+        // Find (detect) live clusters //
+        // count number of vertices in cyclic graph
+
+        // Find the biggest cluster
+
+        // Send gliders with the right rotation towards the cluster
+        var glider = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 2]];
+        // Redraw the starting point
+        Graphics.drawCell(x,y, true, false);
+        //Life.nextGen[x][y] = false;
+        //Drawing the glider
+        for (i = 0; i < glider.length; i++)
+                Life.nextGen[x + glider[i][0]][y + glider[i][1]] = true;
+
+        // All starting points have been drawn, removing starting points
+        Life.startingPointForGliders = new Array();
     },
 
     /* Produces next state. */
@@ -607,7 +627,7 @@ var Life =
         else stats.innerHTML = Life.generation;
 
         Graphics.smartPaint();
-        
+
         for (x = 0; x < Life.cellsX; x++)
         {
             for (y = 0; y < Life.cellsY; y++)
