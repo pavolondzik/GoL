@@ -11,13 +11,13 @@ $('document').ready(function () {
     var spinnerX = $("#spinnerX").spinner();
     var spinnerY = $("#spinnerY").spinner();
 
-    spinnerX.spinner({ min: 4, max: 100 }).val(21);
-    spinnerY.spinner({ min: 4, max: 50 }).val(21);
+    spinnerX.spinner({ min: 4, max: 100 }).val(80);
+    spinnerY.spinner({ min: 4, max: 50 }).val(40);
 
     cellsX = spinnerX.spinner('value');
     cellsY = spinnerY.spinner('value');
 
-    Life.initUniverse(cellsX, cellsY);
+    Life.initUniverse(cellsY, cellsX);
 
     $('#patterns').change(function () {
         $('#patterns option:selected').each(function () {
@@ -33,14 +33,14 @@ $('document').ready(function () {
 $("#spinnerX").spinner({
     spin: function (event, ui) {
         cellsX = $(this).spinner('value');
-        Life.initUniverse(cellsX, cellsY);
+        Life.initUniverse(cellsY, cellsX);
     }
 });
 
 $("#spinnerY").spinner({
     spin: function (event, ui) {
         cellsY = $(this).spinner('value');
-        Life.initUniverse(cellsX, cellsY);
+        Life.initUniverse(cellsY, cellsX);
     }
 });
 
