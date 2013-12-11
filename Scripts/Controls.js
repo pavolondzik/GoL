@@ -11,8 +11,8 @@ $('document').ready(function () {
     var spinnerX = $("#spinnerX").spinner();
     var spinnerY = $("#spinnerY").spinner();
 
-    spinnerX.spinner({ min: 4, max: 100 }).val(80);
-    spinnerY.spinner({ min: 4, max: 50 }).val(40);
+    spinnerX.spinner({ min: 4, max: 100 }).val(21);
+    spinnerY.spinner({ min: 4, max: 50 }).val(21);
 
     cellsX = spinnerX.spinner('value');
     cellsY = spinnerY.spinner('value');
@@ -109,7 +109,7 @@ var previouslyChecked = false;
 $(":radio").bind("change", function (event) {
     if (automaticRadioButton.checked) {
         Graphics.randomPaint();
-        // Listen to user's click
+        // Listen to user's click - changing drawing procedure
         canvas.removeEventListener("mousedown", Graphics.getCell, false);
         canvas.addEventListener("mousedown", Graphics.getStartingPoint, false);
         previouslyChecked = true;

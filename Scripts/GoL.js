@@ -50,7 +50,6 @@ var Graphics =
     /* Sets canvas backround, dimensions and event listeners. */
     init:       function ()
     {
-        //canvas.style.position = "absolute";
         canvas.style.backgroundColor = Graphics.offColour;
         canvas.width = Life.cellsX * Graphics.cellSize;
         canvas.height = Life.cellsY * Graphics.cellSize;
@@ -230,12 +229,22 @@ var Graphics =
         var cellCoordinates = new Array();
         cellCoordinates = Graphics.getCoordinates(event);
 
-        // Save coordinates to Life.startingPointForGliders
+        // Save coordinates to Life.startPoints array of arrays
         if (cellCoordinates.length != 2) return;
         var x = cellCoordinates[0];
         var y = cellCoordinates[1];
-        Life.startingPointForGliders[0] = x;
-        Life.startingPointForGliders[1] = y;
+        Life.startPoints.find = function find(x, y) {
+            var i;
+            for (i = 0; i < this.length; i++) {
+                if ((this[i][0] == x) && (this[i][1] == y))
+                    return i;
+            }
+            return -1;
+        }
+        var position = Life.startPoints.find(x,y);
+        if(position == -1) // Starting point has not been found, add it
+            Life.startPoints.push([x, y]);
+        else Life.startPoints.splice(position, 1);
 
         // Add cell's changed state to previous generation
         Life.prevGen[x][y] = !Life.prevGen[x][y];
@@ -323,14 +332,14 @@ var Graphics =
 
             for (i = x - 1; i < x + 2; i++) {
                 for (j = y - 1; j < y + 2; j++) {
-                    if((i <= Life.cellsX) && (j <= Life.cellsY))
+                    if ((i > -1) && (j > -1) && (i <= Life.cellsX) && (j <= Life.cellsY))
                         array.push(new Array(i, j));
                 }
             }
             return array;
         }
 
-        // Print random blinkers 
+        // Seed universe with random blinkers 
         for (count = 1; count < 16; count++) {
             kx = Math.floor(Math.random() * (Life.cellsX - 4)) + 2;
             ky = Math.floor(Math.random() * (Life.cellsY - 4)) + 2;
@@ -381,7 +390,7 @@ var Life =
     xLowerRight: new Number(0),
     yLowerRight: new Number(0),
     lifeExists: false,
-    startingPointForGliders: new Array(),
+    startPoints: new Array(), // Starting Points For Gliders
 
     /* Sets matrix(universe) states and draws canvas matrix. */
     initUniverse: function (cellsX, cellsY)
@@ -542,45 +551,60 @@ var Life =
     {
         var i,
             j,
+            x,
+            y,
             count = 0,
-            countFlag = false;
+            coordinates = new Array();
 
         // Update generation count
         stats.innerHTML = Life.generation;
 
         // Get starting point
-        if (Life.startingPointForGliders.length != 2) return;
-        var x = Life.startingPointForGliders[0];
-        var y = Life.startingPointForGliders[1];
+        if (Life.startPoints.length == 0) return;
+        while (Life.startPoints.length != 0) {
+            coordinates = Life.startPoints.pop();
 
-        // Detect alive neigbours
-        for (i = x - 1; i < 3; i++) {
-            for (j = y - 1; j < 3; j++) {
-                if (i == x && j == y) continue;
-                if(!nextGen[i][j])
-                    count++
+            x = coordinates[0];
+            y = coordinates[1];
+            // Exit if coordinates are out of canvas boundaries
+            if ((x > (Life.cellsX - 3)) || (y > (Life.cellsY - 3)))
+                continue;
+
+            // Detect alive neigbours of starting point, OR count = Life.neighbourCount(x, y);
+            for (i = x - 1; i < x + 2; i++) {
+                for (j = y - 1; j < y + 2; j++) {
+                    if ((i > -1) && (j > -1) && (i < Life.cellsX) && (j < Life.cellsY)) {
+                        if (i == x && j == y) continue;
+                        if (Life.nextGen[i][j])
+                            count++
+                    }
+                }
             }
+            
+            // if all neighbours are dead, we can draw glider
+            if (count != 0) continue;
+
+
+// Get closest organism to starting point 
+
+            
+
+            // Send gliders with the right rotation towards the cluster
+            //var glider = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 2]];
+
+            // Rotate glider
+
+            // Redraw the starting point to make it the same color as other live cells in given mode
+            //Graphics.drawCell(x, y, true, false);
+            ////Life.nextGen[x][y] = false;
+
+            //Drawing the glider
+            //for (i = 0; i < glider.length; i++)
+            //    Life.nextGen[x + glider[i][0]][y + glider[i][1]] = true;
         }
-        // if all neighbours are dead, we can draw glider
-        if (count == 0)
-            countFlag = true;
-
-        // Find (detect) live clusters //
-        // count number of vertices in cyclic graph
-
-        // Find the biggest cluster
-
-        // Send gliders with the right rotation towards the cluster
-        var glider = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 2]];
-        // Redraw the starting point
-        Graphics.drawCell(x,y, true, false);
-        //Life.nextGen[x][y] = false;
-        //Drawing the glider
-        for (i = 0; i < glider.length; i++)
-                Life.nextGen[x + glider[i][0]][y + glider[i][1]] = true;
 
         // All starting points have been drawn, removing starting points
-        Life.startingPointForGliders = new Array();
+        Life.startPoints = new Array();
     },
 
     /* Produces next state. */
@@ -592,6 +616,7 @@ var Life =
 
         Life.generation++;
 
+        // Next generation is the same as previous
         for (x = 0; x < Life.cellsX; x++)
         {
             for (y = 0; y < Life.cellsY; y++)
@@ -600,6 +625,7 @@ var Life =
             }
         }
 
+        // Rewriting only cells to which Conway's GoL rules apply
         for (x = 0; x < Life.cellsX; x++)
         {
             for (y = 0; y < Life.cellsY; y++)
@@ -607,14 +633,14 @@ var Life =
                 count = Life.neighbourCount(x, y);
 
                 // Game of Life rules
-                if (Life.prevGen[x][y])                // A live cell with two or three live neighbors stays alive (survival)
+                if (Life.prevGen[x][y])                 // A live cell with two or three live neighbors stays alive (survival)
                 {
                     if (count < 2 || count > 3)         // (live cell dies if no. of neighbours is not 2 or 3)
                     {
                         Life.nextGen[x][y] = false;
                     }
                 } else if (count === 3) {               // A dead cell with exactly three live neighbors becomes a live cell (birth).
-                    Life.nextGen[x][y] = true;          // (dead cell stays dead cell)
+                    Life.nextGen[x][y] = true;          // (otherwise dead cell stays dead cell)
                 }
             }
         }
@@ -628,6 +654,7 @@ var Life =
 
         Graphics.smartPaint();
 
+        // Forgetting previous generation (previous gen becomes current)
         for (x = 0; x < Life.cellsX; x++)
         {
             for (y = 0; y < Life.cellsY; y++)
@@ -724,6 +751,7 @@ var Life =
         var x,
             y;
        
+        // Setting both generations to dead state
         for (x = 0; x < Life.cellsX; x++)
         {
             for (y = 0; y < Life.cellsY; y++)
