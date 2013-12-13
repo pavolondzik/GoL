@@ -266,7 +266,7 @@ var Graphics =
         Life.prevGen[y][x] = !Life.prevGen[y][x];
 
         // Draw cell in trailing mode
-        Graphics.drawCentrePoint(y, x, Life.prevGen[x][y]);
+        Graphics.drawCentrePoint(y, x, Life.prevGen[y][x]);
     },
 
     /* Draws canvas matrix. */
@@ -514,6 +514,26 @@ var Life =
         return count;
     },
 
+    
+    /* DESC: Returns Neighbourhood of the cell as array of cells.
+       IN:   Integers as coordinates y,x.
+       OUT:  Array of objects "Cell".
+    */
+    neighbours: function (y, x) {
+        var i,
+            j,
+            array = new Array();
+
+        for (j = y - 1; j < y + 2; j++) {
+            for (i = x - 1; i < x + 2; i++) {
+                if ((i > -1) && (j > -1) && (i < cellsX) && (j < cellsY))
+                    if ((i == x) && (j == y)) continue;
+                    else if (Life.nextGen[j][i]) array.push(new Cell(j,i,Life.nextGen[j][i]));
+            }
+        }
+        return array;
+    },
+
     /*
         If previous genereation contains live cell
         send correctly rotated glider(s) in next generation.
@@ -571,15 +591,157 @@ var Life =
         return;
     },
 
+    getOrganisms: function () {
+        var i,j,k,
+            organism = new Object(),    // Stores cells
+            visited = new Array(),      // "visited" is vector with live cells
+            allOrganisms = new Array(); // Array with all organisms
+
+        /* Organism object */
+        organism.cells = new Array();
+        organism.add = function(cell) {
+            var found = false;
+            for(var i = 0; i < this.cells.length; i++) {
+                if(cmpCells(this.cells[i],cell)) {
+                    found = true;
+                }
+            }
+            if(!found) {
+                this.cells.push(cell);
+                return true;
+            }
+            else return false;
+        }
+        organism.clone = function () {
+            var copy = this.constructor();
+            for (var attr in this) {
+                if (this.hasOwnProperty(attr)) copy[attr] = this[attr];
+            }
+            return copy;
+        }
+
+        // Input: coordinates [y,x]
+        // Output: Array of coordinates [y,x]
+        organism.getClosestCell = function (y,x) {
+            var distX,
+                distY,
+                distances = new Array(),
+                minDistance,
+                closestCells = new Array();
+            for (var i = 0; i < this.cells.length; i++) {
+                // Distance for every cell in organism from starting point
+                distY =  y - this.cells[i].y;
+                distX =  x - this.cells[i].x;
+            
+                // Find smallest distance (every cell has one distance)
+                // Array "distances" preserves order of cells
+                distances.push(Math.sqrt(Math.pow(distY,2) + Math.pow(distX,2)));
+            }
+            minDistance = Math.min.apply(null, distances);
+            for (var i = 0; i < distances.length; i++) {
+                if (minDistance === distances[i])
+                    closestCells.push([this.cells[i].y,this.cells[i].x]);
+            }
+
+            // Choosing randomly one closest from all closest cells
+            return closestCells[Graphics.getRandomInt(0, closestCells.length-1)];
+        }
+
+        // Initialising "visited" array
+        for (j = 0; j < Life.cellsY; j++) {
+            for (i = 0; i < Life.cellsX; i++) {
+                if(Life.nextGen[j][i]) visited.push(new Cell(j,i,false));
+            }
+        }
+
+        function addCellToOrganism(k) {
+            var m,
+                l = 0,
+                nbs = new Array();          // Neighbours
+
+            if (k < visited.length) {
+                // If cell has not been visited and is alive 
+                if (!visited[k].alive) { // reusing "alive" property to indicate if cell was visited (all cells are alive)
+                    organism.add(new Cell(visited[k].y, visited[k].x, Life.nextGen[visited[k].y][visited[k].x])); // add cell to organism
+
+                    // Cell has been processed (visited)
+                    visited[k].alive = true;
+
+                    // Finding live neighbours of the cell
+                    nbs = Life.neighbours(visited[k].y, visited[k].x);
+
+                    // Walking through neighbours
+                    for (l = 0; l < nbs.length; l++) {
+                        for (m = 0; m < visited.length; m++)
+                            if (cmpCells(nbs[l], visited[m])) addCellToOrganism(m);
+                    }
+                }
+            }
+        }
+
+        // Find organisms - walk through "visited"
+        for (k = 0; k < visited.length; k++) {
+            if(!visited[k].alive) addCellToOrganism(k);
+            if (organism.cells.length > 0) {
+                allOrganisms.push(organism.clone());
+                organism.cells = new Array();
+            }
+        }
+
+        return allOrganisms;
+    },
+
     automaticSelection: function()
     {
+    /**/// VARIABLE DECLARATION
         var i,
             j,
             x,
             y,
-            count = 0,
-            coordinates = new Array();
+            count = 0,                          // Count of neighbours of the starting point
+            coordinates = new Array(),          // Coordinates of starting point
+            allOrganisms = new Array(),
+            organismDistances = new Array(),
+            closestOrganisms = new Array(),
+            distY = 0,
+            distX = 0,
+            dist,
+            minDist,
+            cellCoordinates,
+            endPoint;
 
+        // Pattern definition
+        var glider = [[0, 0], [0, 1], [0, 2], [1, 0], [2, 1]]; // North-West direction
+        var smallFish = [[0, 1], [0, 4], [1, 0], [2, 0], [2, 4], [3, 0], [3, 1], [3, 2], [3, 3]]; // West direction
+        var pattern; // New Pattern after rotation
+        // Rotation matrix
+        var R90 = [[0, -1], [1, 0]]; // 90 Degrees counterclockwise rotation
+
+        // Clock-wise rotation
+        //newGlider = R * glider; R is rotation matrix
+        function rotate(R, pattern, repeat) {
+            var i, j, y, x,
+                newPattern = pattern;
+
+            if (!repeat > 0) return pattern;
+
+            for (j = 0; j < repeat; j++) {
+                for (i = 0; i < newPattern.length; i++) { // [y,x]
+                    y = newPattern[i][0];
+                    x = newPattern[i][1];
+                    newPattern[i][0] = R[1][0] * x + R[1][1] * y;
+                    newPattern[i][1] = R[0][0] * x + R[0][1] * y;
+                }
+            }
+            return newPattern;
+        }
+        function addToNextGen(pattern) {
+            if(pattern.length > 0)
+                for (i = 0; i < pattern.length; i++)
+                    Life.nextGen[y + pattern[i][0]][x + pattern[i][1]] = true;
+        }
+
+    /**/// CODE
         // Update generation count
         stats.innerHTML = Life.generation;
 
@@ -605,26 +767,57 @@ var Life =
                 }
             }
             
-            // if all neighbours are dead, we can draw glider
+            // If all neighbours are dead, we can draw pattern
             if (count != 0) continue;
 
+        /**/// GET CLOSEST ORGANISM TO STARTING POINT
+            // Get all organisms
+            allOrganisms = Life.getOrganisms();
 
-// Get closest organism to starting point 
+            // Preventing the Pattern creation when Universe is dead
+            if (!(allOrganisms.length > 0)) continue;
 
-            
+            // Extracting organism distances (distance between starting point and closest organism cell)
+            for (i = 0; i < allOrganisms.length; i++) {
+                cellCoordinates = allOrganisms[i].getClosestCell(y, x);
+                distY = y - cellCoordinates[0];
+                distX = x - cellCoordinates[1];
+                dist = Math.sqrt(Math.pow(distY, 2) + Math.pow(distX, 2));
+                organismDistances.push(dist);
+            }
+            // Finding minimal distance
+            minDist = Math.min.apply(null, organismDistances);
+            // Selecting organisms with minimal distance to starting point
+            // (Possible optimisation: get coordinates of the closest cell from organism and save them in array)
+            for (i = 0; i < organismDistances.length; i++) {
+                if (minDist === organismDistances[i])
+                    closestOrganisms.push(allOrganisms[i]);
+            }
 
-            // Send gliders with the right rotation towards the cluster
-            //var glider = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 2]];
+            // Choosing randomly one closest organism
+            endPoint = closestOrganisms[Graphics.getRandomInt(0, closestOrganisms.length - 1)].getClosestCell(y, x);
 
-            // Rotate glider
+            // Determine the direction, dp stands for directionPoint (vector), [y,x]
+            // and rotate patterns
+            var dp = [endPoint[0] - y, endPoint[1] - x];
+
+            if (dp[0] < 0 && dp[1] < 0) pattern = glider;               // North-West
+            if (dp[0] < 0 && dp[1] > 0) pattern = rotate(R90, glider, 1); // North-East
+            if (dp[0] > 0 && dp[1] > 0) pattern = rotate(R90, glider, 2); // South-East
+            if (dp[0] > 0 && dp[1] < 0) pattern = rotate(R90, glider, 3); // South-West
+
+            if (dp[0] === 0 && dp[1] < 0) pattern = smallFish;               // West
+            if (dp[0] < 0 && dp[1] === 0) pattern = rotate(R90, smallFish, 1); // North
+            if (dp[0] === 0 && dp[1] > 0) pattern = rotate(R90, smallFish, 2); // East
+            if (dp[0] > 0 && dp[1] === 0) pattern = rotate(R90, smallFish, 3); // South
+
+        /**/// SEND GLIDER OR LIGHTWEIGHT SPACESHIP WITH THE RIGHT ROTATION TOWARDS THE CLOSEST ORGANISM
 
             // Redraw the starting point to make it the same color as other live cells in given mode
-            //Graphics.drawCell(y, x, true, false);
-            ////Life.nextGen[y][x] = false;
+            Graphics.drawCell(y, x, true, false);
+            Life.nextGen[y][x] = false;
 
-            //Drawing the glider
-            //for (i = 0; i < glider.length; i++)
-            //    Life.nextGen[y + glider[i][0]][x + glider[i][1]] = true;
+            addToNextGen(pattern);
         }
 
         // All starting points have been drawn, removing starting points
