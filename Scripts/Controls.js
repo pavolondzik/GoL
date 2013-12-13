@@ -17,7 +17,7 @@ $('document').ready(function () {
     cellsX = spinnerX.spinner('value');
     cellsY = spinnerY.spinner('value');
 
-    Life.initUniverse(cellsX, cellsY);
+    Life.initUniverse(cellsY, cellsX);
 
     $('#patterns').change(function () {
         $('#patterns option:selected').each(function () {
@@ -33,14 +33,14 @@ $('document').ready(function () {
 $("#spinnerX").spinner({
     spin: function (event, ui) {
         cellsX = $(this).spinner('value');
-        Life.initUniverse(cellsX, cellsY);
+        Life.initUniverse(cellsY, cellsX);
     }
 });
 
 $("#spinnerY").spinner({
     spin: function (event, ui) {
         cellsY = $(this).spinner('value');
-        Life.initUniverse(cellsX, cellsY);
+        Life.initUniverse(cellsY, cellsX);
     }
 });
 
@@ -109,7 +109,7 @@ var previouslyChecked = false;
 $(":radio").bind("change", function (event) {
     if (automaticRadioButton.checked) {
         Graphics.randomPaint();
-        // Listen to user's click
+        // Listen to user's click - changing drawing procedure
         canvas.removeEventListener("mousedown", Graphics.getCell, false);
         canvas.addEventListener("mousedown", Graphics.getStartingPoint, false);
         previouslyChecked = true;

@@ -15,15 +15,29 @@ var message = document.getElementById('message');
 var canvas = document.getElementById("Universe");
 var context = canvas.getContext("2d");
 
-/* Enumerations have to be in the same order as select list options. */
-ModeEnum = {
-    RECT:   0,
-    CIRCLE: 1,
-    TRAIL:   2,
-    TRAIL_NO_GRID: 3
+/**************  C E L L  ***************/
+
+var Cell = function (y, x, alive) {
+    this.y = y;
+    this.x = x;
+    this.alive = alive;
+};
+
+function cmpCells(cell1, cell2) {
+    if (cell1.y == cell2.y && cell1.x == cell2.x) //&& cell1.alive == cell2.alive
+        return true;
+    else return false;
 }
 
 /************ G R A P H I C S *************/
+
+/* Enumerations have to be in the same order as select list options. */
+ModeEnum = {
+    RECT: 0,
+    CIRCLE: 1,
+    TRAIL: 2,
+    TRAIL_NO_GRID: 3
+}
 
 var Graphics =
 {
@@ -50,7 +64,6 @@ var Graphics =
     /* Sets canvas backround, dimensions and event listeners. */
     init:       function ()
     {
-        //canvas.style.position = "absolute";
         canvas.style.backgroundColor = Graphics.offColour;
         canvas.width = Life.cellsX * Graphics.cellSize;
         canvas.height = Life.cellsY * Graphics.cellSize;
@@ -61,7 +74,7 @@ var Graphics =
     /* Returns true if coordinates x,y are
        coordinates of middle cells.
     */
-    findMiddleCells:    function(x,y)
+    findMiddleCells:    function(y,x)
     {
         var isMiddleX = false;
         var isMiddleY = false;
@@ -91,7 +104,7 @@ var Graphics =
     },
 
     /* Draws cell with selected mode. */
-    drawCell:   function (x, y, alive, trail)
+    drawCell:   function (y, x, alive, trail)
     {
         switch(Graphics.displayMode)
         {
@@ -102,7 +115,7 @@ var Graphics =
                 context.fill();
                 context.lineWidth = 1;
                 // Find middle coordinates
-                if (Graphics.findMiddleCells(x,y)) context.strokeStyle = Graphics.middleCellColour;
+                if (Graphics.findMiddleCells(y,x)) context.strokeStyle = Graphics.middleCellColour;
                 else context.strokeStyle = Graphics.aliveCellColour;
                 context.stroke();
                 break;
@@ -113,7 +126,7 @@ var Graphics =
                 context.fill();
                 context.lineWidth = 1;
                 // Find middle coordinates
-                if (Graphics.findMiddleCells(x, y)) context.strokeStyle = Graphics.middleCellColour;
+                if (Graphics.findMiddleCells(y, x)) context.strokeStyle = Graphics.middleCellColour;
                 else context.strokeStyle = Graphics.aliveCellColour;
                 context.stroke();
                 if (alive) {
@@ -135,7 +148,7 @@ var Graphics =
                 if (trail) context.strokeStyle = Graphics.trailColour;
 
                 // Find middle coordinates
-                if (Graphics.findMiddleCells(x, y)) context.strokeStyle = Graphics.middleCellColour;
+                if (Graphics.findMiddleCells(y, x)) context.strokeStyle = Graphics.middleCellColour;
 
                 context.stroke();
                 break;
@@ -150,27 +163,31 @@ var Graphics =
                 if (trail) context.strokeStyle = Graphics.trailColour;
 
                 // Find middle coordinates
-                if (Graphics.findMiddleCells(x, y)) context.strokeStyle = Graphics.middleCellColour;
+                if (Graphics.findMiddleCells(y, x)) context.strokeStyle = Graphics.middleCellColour;
 
                 context.stroke();
                 break;
         }
     },
 
-    drawCentrePoint:   function (x, y)
+    drawCentrePoint:   function (y, x, alive)
     {
         context.beginPath();
         context.rect(x * Graphics.cellSize + 1, y * Graphics.cellSize + 1, Graphics.cellSize - 1, Graphics.cellSize - 1);
-        context.fillStyle = Graphics.aliveCentrePointCoulour;
+        if (alive) {
+            context.fillStyle = Graphics.aliveCentrePointCoulour;
+        }
+        else context.fillStyle = Graphics.deadCellColour;
         context.fill();
         context.lineWidth = 1;
         // Find middle coordinates
-        if (Graphics.findMiddleCells(x,y)) context.strokeStyle = Graphics.middleCellColour;
+        if (Graphics.findMiddleCells(y,x)) context.strokeStyle = Graphics.middleCellColour;
         else context.strokeStyle = Graphics.aliveCellColour;
         context.stroke();
     },
 
     /* Returns cell co-ordinates, index starts from [0][0]. */
+    /* Returns empty array if coordinates are from outside of canvas. */
     getCoordinates: function(event)
     {
         var x = new Number(),
@@ -199,7 +216,7 @@ var Graphics =
         if (x > Life.cellsX - 1 || y > Life.cellsY - 1 || x < 0 || y < 0) {
             return new Array();
         }
-        return new Array(x,y);
+        return new Array(y,x);
     },
 
     /* 
@@ -212,13 +229,13 @@ var Graphics =
         cellCoordinates = Graphics.getCoordinates(event);
 
         if (cellCoordinates.length != 2) return;
-        var x = cellCoordinates[0];
-        var y = cellCoordinates[1];
+        var y = cellCoordinates[0];
+        var x = cellCoordinates[1];
 
         // Save cell's changed state
-        Life.prevGen[x][y] = !Life.prevGen[x][y];
+        Life.prevGen[y][x] = !Life.prevGen[y][x];
         // Draw cell
-        Graphics.drawCell(x, y, Life.prevGen[x][y], false);
+        Graphics.drawCell(y, x, Life.prevGen[y][x], false);
     },
 
     /* Returns cell co-ordinates of starting point for gliders. */
@@ -226,18 +243,30 @@ var Graphics =
         var cellCoordinates = new Array();
         cellCoordinates = Graphics.getCoordinates(event);
 
-        // Save coordinates to Life.startingPointForGliders
+        // Save coordinates to Life.startPoints array of arrays
         if (cellCoordinates.length != 2) return;
-        var x = cellCoordinates[0];
-        var y = cellCoordinates[1];
-        Life.startingPointForGliders[0] = x;
-        Life.startingPointForGliders[1] = y;
+        var y = cellCoordinates[0];
+        var x = cellCoordinates[1];
+        
+        // Finds coordinates matching startpoint coordinates
+        Life.startPoints.find = function find(y, x) {
+            var i;
+            for (i = 0; i < this.length; i++) {
+                if ((this[i][0] == y) && (this[i][1] == x))
+                    return i;
+            }
+            return -1;
+        }
+        var position = Life.startPoints.find(y,x);
+        if(position == -1) // Starting point has not been found, add it
+            Life.startPoints.push([y, x]);
+        else Life.startPoints.splice(position, 1);
 
         // Add cell's changed state to previous generation
-        Life.prevGen[x][y] = true;
+        Life.prevGen[y][x] = !Life.prevGen[y][x];
 
         // Draw cell in trailing mode
-        Graphics.drawCentrePoint(x, y);
+        Graphics.drawCentrePoint(y, x, Life.prevGen[y][x]);
     },
 
     /* Draws canvas matrix. */
@@ -246,11 +275,10 @@ var Graphics =
         var x,
             y;
 
-        for (x = 0; x < Life.cellsX; x++)
+        for (y = 0; y < Life.cellsY; y++)
         {
-            for (y = 0; y < Life.cellsY; y++)
-            {
-                Graphics.drawCell(x, y, Life.prevGen[x][y], false);
+            for (x = 0; x < Life.cellsX; x++) {
+                Graphics.drawCell(y, x, Life.nextGen[y][x], false);
             }
         }
     },
@@ -261,16 +289,16 @@ var Graphics =
         var x,
             y;
 
-        for (x = 0; x < Life.cellsX; x++) {
-            for (y = 0; y < Life.cellsY; y++) {
-                if (Life.prevGen[x][y] !== Life.nextGen[x][y]) {
-                    Graphics.drawCell(x, y, Life.nextGen[x][y], true);
+        for (y = 0; y < Life.cellsY; y++) {
+            for (x = 0; x < Life.cellsX; x++) {
+                if (Life.prevGen[y][x] !== Life.nextGen[y][x]) {
+                    Graphics.drawCell(y, x, Life.nextGen[y][x], true);
                 }
             }
         }
     },
 
-    printMessage: function (x, y, text) {
+    printMessage: function (y, x, text) {
         // Visibility
         message.style.backgroundColor = "lightGrey";
         message.style.opacity = "0.9";
@@ -300,7 +328,7 @@ var Graphics =
     },
 
     clearMessage: function () {
-        //message.innerHTML = "";
+        message.innerHTML = "";
         message.style.zIndex = "-1";
     },
 
@@ -311,36 +339,36 @@ var Graphics =
             ky = 0,
             neighbours = new Array();
 
-        // Returns Neighbourhood of the cell plus the cell
-        function Neighbourhood(x, y) {
+        // Returns Moore neighbourhood of the cell plus the centre cell
+        function MooreAreaCentreCell(y, x) {
             var i,
                 j,
                 array = new Array();
 
-            for (i = x - 1; i < x + 2; i++) {
-                for (j = y - 1; j < y + 2; j++) {
-                    if((i <= Life.cellsX) && (j <= Life.cellsY))
-                        array.push(new Array(i, j));
+            for (j = y - 1; j < y + 2; j++) {
+                for (i = x - 1; i < x + 2; i++) {
+                    if ((i > -1) && (j > -1) && (i <= Life.cellsX) && (j <= Life.cellsY))
+                        array.push(new Array(j, i));
                 }
             }
             return array;
         }
 
-        // Print random blinkers 
+        // Seed universe with random blinkers 
         for (count = 1; count < 16; count++) {
-            kx = Math.floor(Math.random() * (Life.cellsX - 4)) + 2;
             ky = Math.floor(Math.random() * (Life.cellsY - 4)) + 2;
-            neighbours = new Neighbourhood(kx, ky);
+            kx = Math.floor(Math.random() * (Life.cellsX - 4)) + 2;
+            neighbours = new MooreAreaCentreCell(ky, kx);
             for (i = 0; i < neighbours.length; i++) {
-                Life.prevGen[neighbours[i][0]][neighbours[i][1]] = Graphics.random();
+                Life.prevGen[neighbours[i][0]][neighbours[i][1]] = Graphics.getRandomBool();
                 Graphics.drawCell(neighbours[i][0], neighbours[i][1], Life.prevGen[neighbours[i][0]][neighbours[i][1]], false);
             }
         }
 
         // Display div to invite user to select
         // starting point for gliders
-        Graphics.printMessage(canvas.offsetLeft + Math.floor(canvas.width / 2),
-                              canvas.offsetTop + Math.floor(canvas.height / 2),
+        Graphics.printMessage(canvas.offsetTop + Math.floor(canvas.height / 2),
+                              canvas.offsetLeft + Math.floor(canvas.width / 2),
                               "Set starting point for gliders please.");
     },
 
@@ -354,8 +382,16 @@ var Graphics =
     },
 
     /* Generates random number. */
-    random: function () {
+    getRandomBool: function () {
         return Math.random() < 0.5 ? true : false;
+    },
+
+    /**
+     * Returns a random integer between min and max
+     * Using Math.round() will give you a non-uniform distribution!
+     */
+    getRandomInt: function (min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
 
@@ -377,13 +413,13 @@ var Life =
     xLowerRight: new Number(0),
     yLowerRight: new Number(0),
     lifeExists: false,
-    startingPointForGliders: new Array(-1,-1),
+    startPoints: new Array(), // Starting Points For Gliders
 
     /* Sets matrix(universe) states and draws canvas matrix. */
-    initUniverse: function (cellsX, cellsY)
+    initUniverse: function (cellsY, cellsX)
     {
-        Life.cellsX = cellsX;
         Life.cellsY = cellsY;
+        Life.cellsX = cellsX;
 
         // Set values for algorithm
         Life.xUpperLeft = 0;
@@ -397,14 +433,15 @@ var Life =
         document.addEventListener("DOMContentLoaded", Graphics.init(), false);
 
         // Initialize states
-        for (x = 0; x < Life.cellsX; x++)
+        
+        for (y = 0; y < Life.cellsY; y++)
         {
-            Life.prevGen[x] = [];
-            Life.nextGen[x] = [];
-            for (y = 0; y < Life.cellsY; y++)
+            Life.prevGen[y] = [];
+            Life.nextGen[y] = [];
+            for (x = 0; x < Life.cellsX; x++)
             {
-                Life.prevGen[x][y] = false;
-                Life.nextGen[x][y] = false;
+                Life.prevGen[y][x] = false;
+                Life.nextGen[y][x] = false;
             }
         }
 
@@ -452,19 +489,19 @@ var Life =
     },
 
     /* Counts number of alive adjacent cells. */
-    neighbourCount: function (x, y)
+    neighbourCount: function (y, x)
     {
         var count = 0,
             i,
             neighbours = [ // Clockwise direction
-                Life.prevGen[x][(y - 1 + Life.cellsY) % Life.cellsY],
-                Life.prevGen[(x + 1 + Life.cellsX) % Life.cellsX][(y - 1 + Life.cellsY) % Life.cellsY],
-                Life.prevGen[(x + 1 + Life.cellsX) % Life.cellsX][y],
-                Life.prevGen[(x + 1 + Life.cellsX) % Life.cellsX][(y + 1 + Life.cellsY) % Life.cellsY],
-                Life.prevGen[x][(y + 1 + Life.cellsY) % Life.cellsY],
-                Life.prevGen[(x - 1 + Life.cellsX) % Life.cellsX][(y + 1 + Life.cellsY) % Life.cellsY],
-                Life.prevGen[(x - 1 + Life.cellsX) % Life.cellsX][y],
-                Life.prevGen[(x - 1 + Life.cellsX) % Life.cellsX][(y - 1 + Life.cellsY) % Life.cellsY]
+                Life.prevGen[y][(x - 1 + Life.cellsX) % Life.cellsX],
+                Life.prevGen[(y + 1 + Life.cellsY) % Life.cellsY][(x - 1 + Life.cellsX) % Life.cellsX],
+                Life.prevGen[(y + 1 + Life.cellsY) % Life.cellsY][x],
+                Life.prevGen[(y + 1 + Life.cellsY) % Life.cellsY][(x + 1 + Life.cellsX) % Life.cellsX],
+                Life.prevGen[y][(x + 1 + Life.cellsX) % Life.cellsX],
+                Life.prevGen[(y - 1 + Life.cellsY) % Life.cellsY][(x + 1 + Life.cellsX) % Life.cellsX],
+                Life.prevGen[(y - 1 + Life.cellsY) % Life.cellsY][x],
+                Life.prevGen[(y - 1 + Life.cellsY) % Life.cellsY][(x - 1 + Life.cellsX) % Life.cellsX]
             ];
 
         // If neighbour alive (true), add him up
@@ -477,18 +514,41 @@ var Life =
         return count;
     },
 
+    
+    /* DESC: Returns Neighbourhood of the cell as array of cells.
+       IN:   Integers as coordinates y,x.
+       OUT:  Array of objects "Cell".
+    */
+    neighbours: function (y, x) {
+        var i,
+            j,
+            array = new Array();
+
+        for (j = y - 1; j < y + 2; j++) {
+            for (i = x - 1; i < x + 2; i++) {
+                if ((i > -1) && (j > -1) && (i < cellsX) && (j < cellsY))
+                    if ((i == x) && (j == y)) continue;
+                    else if (Life.nextGen[j][i]) array.push(new Cell(j,i,Life.nextGen[j][i]));
+            }
+        }
+        return array;
+    },
+
     /*
         If previous genereation contains live cell
         send correctly rotated glider(s) in next generation.
     */
     userSelection: function ()
     {
+        // Update generation count
+        stats.innerHTML = Life.generation;
+
         // Check if Universe has at least one alive cell
         loop:
             {
-                for (x = 0; x < Life.cellsX; x++) {
-                    for (y = 0; y < Life.cellsY; y++) {
-                        if (Life.prevGen[x][y]) {
+                for (y = 0; y < Life.cellsY; y++) {
+                    for (x = 0; x < Life.cellsX; x++) {
+                        if (Life.prevGen[y][x]) {
                             Life.lifeExists = true;
                             break loop;
                         }
@@ -513,54 +573,255 @@ var Life =
         // (-1 means starting from generation 1)
         if ((Life.generation - 1) % 14 == 0) {
             // Upper left corner
-            Life.nextGen[Life.xUpperLeft + 1][Life.yUpperLeft] = true;
-            Life.nextGen[Life.xUpperLeft + 2][Life.yUpperLeft + 1] = true;
-            Life.nextGen[Life.xUpperLeft][Life.yUpperLeft + 2] = true;
-            Life.nextGen[Life.xUpperLeft + 1][Life.yUpperLeft + 2] = true;
-            Life.nextGen[Life.xUpperLeft + 2][Life.yUpperLeft + 2] = true;
+            Life.nextGen[Life.yUpperLeft][Life.xUpperLeft + 1] = true;
+            Life.nextGen[Life.yUpperLeft + 1][Life.xUpperLeft + 2] = true;
+            Life.nextGen[Life.yUpperLeft + 2][Life.xUpperLeft] = true;
+            Life.nextGen[Life.yUpperLeft + 2][Life.xUpperLeft + 1] = true;
+            Life.nextGen[Life.yUpperLeft + 2][Life.xUpperLeft + 2] = true;
 
             //Lower right corner
-            Life.nextGen[Life.xLowerRight][Life.yLowerRight] = true;
-            Life.nextGen[Life.xLowerRight + 1][Life.yLowerRight] = true;
-            Life.nextGen[Life.xLowerRight + 2][Life.yLowerRight] = true;
-            Life.nextGen[Life.xLowerRight][Life.yLowerRight + 1] = true;
-            Life.nextGen[Life.xLowerRight + 1][Life.yLowerRight + 2] = true;
+            Life.nextGen[Life.yLowerRight][Life.xLowerRight] = true;
+            Life.nextGen[Life.yLowerRight][Life.xLowerRight + 1] = true;
+            Life.nextGen[Life.yLowerRight][Life.xLowerRight + 2] = true;
+            Life.nextGen[Life.yLowerRight + 1][Life.xLowerRight] = true;
+            Life.nextGen[Life.yLowerRight + 2][Life.xLowerRight + 1] = true;
         }
-
-        // Update generation count
-        stats.innerHTML = Life.generation;
 
         Life.lifeExists = false;
         return;
     },
 
-    automaticSelection: function()
-    {
-        var i,
-            j;
+    getOrganisms: function () {
+        var i,j,k,
+            organism = new Object(),    // Stores cells
+            visited = new Array(),      // "visited" is vector with live cells
+            allOrganisms = new Array(); // Array with all organisms
 
-        // Get starting point
-        var x = Life.startingPointForGliders[0];
-        var y = Life.startingPointForGliders[1];
+        /* Organism object */
+        organism.cells = new Array();
+        organism.add = function(cell) {
+            var found = false;
+            for(var i = 0; i < this.cells.length; i++) {
+                if(cmpCells(this.cells[i],cell)) {
+                    found = true;
+                }
+            }
+            if(!found) {
+                this.cells.push(cell);
+                return true;
+            }
+            else return false;
+        }
+        organism.clone = function () {
+            var copy = this.constructor();
+            for (var attr in this) {
+                if (this.hasOwnProperty(attr)) copy[attr] = this[attr];
+            }
+            return copy;
+        }
 
-        // Find (detect) live clusters //
-        // count number of vertices in cyclic graph
-        for (i = x - 1; i < 3; i++) {
-            for (j = y - 1; j < 3; j++) {
-                if (i == x && j == y) continue;
-                //if(prevGen[i][j])
+        // Input: coordinates [y,x]
+        // Output: Array of coordinates [y,x]
+        organism.getClosestCell = function (y,x) {
+            var distX,
+                distY,
+                distances = new Array(),
+                minDistance,
+                closestCells = new Array();
+            for (var i = 0; i < this.cells.length; i++) {
+                // Distance for every cell in organism from starting point
+                distY =  y - this.cells[i].y;
+                distX =  x - this.cells[i].x;
+            
+                // Find smallest distance (every cell has one distance)
+                // Array "distances" preserves order of cells
+                distances.push(Math.sqrt(Math.pow(distY,2) + Math.pow(distX,2)));
+            }
+            minDistance = Math.min.apply(null, distances);
+            for (var i = 0; i < distances.length; i++) {
+                if (minDistance === distances[i])
+                    closestCells.push([this.cells[i].y,this.cells[i].x]);
+            }
+
+            // Choosing randomly one closest from all closest cells
+            return closestCells[Graphics.getRandomInt(0, closestCells.length-1)];
+        }
+
+        // Initialising "visited" array
+        for (j = 0; j < Life.cellsY; j++) {
+            for (i = 0; i < Life.cellsX; i++) {
+                if(Life.nextGen[j][i]) visited.push(new Cell(j,i,false));
             }
         }
 
-        // Find the biggest cluster
+        function addCellToOrganism(k) {
+            var m,
+                l = 0,
+                nbs = new Array();          // Neighbours
 
+            if (k < visited.length) {
+                // If cell has not been visited and is alive 
+                if (!visited[k].alive) { // reusing "alive" property to indicate if cell was visited (all cells are alive)
+                    organism.add(new Cell(visited[k].y, visited[k].x, Life.nextGen[visited[k].y][visited[k].x])); // add cell to organism
 
-        // Send gliders with the right rotation towards the cluster
-        var glider = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 2]];
-        //nextGen ...replace the starting point with glider
+                    // Cell has been processed (visited)
+                    visited[k].alive = true;
 
+                    // Finding live neighbours of the cell
+                    nbs = Life.neighbours(visited[k].y, visited[k].x);
+
+                    // Walking through neighbours
+                    for (l = 0; l < nbs.length; l++) {
+                        for (m = 0; m < visited.length; m++)
+                            if (cmpCells(nbs[l], visited[m])) addCellToOrganism(m);
+                    }
+                }
+            }
+        }
+
+        // Find organisms - walk through "visited"
+        for (k = 0; k < visited.length; k++) {
+            if(!visited[k].alive) addCellToOrganism(k);
+            if (organism.cells.length > 0) {
+                allOrganisms.push(organism.clone());
+                organism.cells = new Array();
+            }
+        }
+
+        return allOrganisms;
+    },
+
+    automaticSelection: function()
+    {
+    /**/// VARIABLE DECLARATION
+        var i,
+            j,
+            x,
+            y,
+            count = 0,                          // Count of neighbours of the starting point
+            coordinates = new Array(),          // Coordinates of starting point
+            allOrganisms = new Array(),
+            organismDistances = new Array(),
+            closestOrganisms = new Array(),
+            distY = 0,
+            distX = 0,
+            dist,
+            minDist,
+            cellCoordinates,
+            endPoint;
+
+        // Pattern definition
+        var glider = [[0, 0], [0, 1], [0, 2], [1, 0], [2, 1]]; // North-West direction
+        var smallFish = [[0, 1], [0, 4], [1, 0], [2, 0], [2, 4], [3, 0], [3, 1], [3, 2], [3, 3]]; // West direction
+        var pattern; // New Pattern after rotation
+        // Rotation matrix
+        var R90 = [[0, -1], [1, 0]]; // 90 Degrees counterclockwise rotation
+
+        // Clock-wise rotation
+        //newGlider = R * glider; R is rotation matrix
+        function rotate(R, pattern, repeat) {
+            var i, j, y, x,
+                newPattern = pattern;
+
+            if (!repeat > 0) return pattern;
+
+            for (j = 0; j < repeat; j++) {
+                for (i = 0; i < newPattern.length; i++) { // [y,x]
+                    y = newPattern[i][0];
+                    x = newPattern[i][1];
+                    newPattern[i][0] = R[1][0] * x + R[1][1] * y;
+                    newPattern[i][1] = R[0][0] * x + R[0][1] * y;
+                }
+            }
+            return newPattern;
+        }
+        function addToNextGen(pattern) {
+            if(pattern.length > 0)
+                for (i = 0; i < pattern.length; i++)
+                    Life.nextGen[y + pattern[i][0]][x + pattern[i][1]] = true;
+        }
+
+    /**/// CODE
         // Update generation count
         stats.innerHTML = Life.generation;
+
+        // Get starting point
+        if (Life.startPoints.length == 0) return;
+        while (Life.startPoints.length != 0) {
+            coordinates = Life.startPoints.pop();
+
+            y = coordinates[0];
+            x = coordinates[1];
+            // Exit if coordinates are out of canvas boundaries
+            if ((x > (Life.cellsX - 3)) || (y > (Life.cellsY - 3)))
+                continue;
+
+            // Detect alive neigbours of starting point, OR count = Life.neighbourCount(x, y);
+            for (j = y - 1; j < y + 2; j++) {
+                for (i = x - 1; i < x + 2; i++) {
+                    if ((i > -1) && (j > -1) && (i < Life.cellsX) && (j < Life.cellsY)) {
+                        if (i == x && j == y) continue;
+                        if (Life.nextGen[j][i])
+                            count++
+                    }
+                }
+            }
+            
+            // If all neighbours are dead, we can draw pattern
+            if (count != 0) continue;
+
+        /**/// GET CLOSEST ORGANISM TO STARTING POINT
+            // Get all organisms
+            allOrganisms = Life.getOrganisms();
+
+            // Preventing the Pattern creation when Universe is dead
+            if (!(allOrganisms.length > 0)) continue;
+
+            // Extracting organism distances (distance between starting point and closest organism cell)
+            for (i = 0; i < allOrganisms.length; i++) {
+                cellCoordinates = allOrganisms[i].getClosestCell(y, x);
+                distY = y - cellCoordinates[0];
+                distX = x - cellCoordinates[1];
+                dist = Math.sqrt(Math.pow(distY, 2) + Math.pow(distX, 2));
+                organismDistances.push(dist);
+            }
+            // Finding minimal distance
+            minDist = Math.min.apply(null, organismDistances);
+            // Selecting organisms with minimal distance to starting point
+            // (Possible optimisation: get coordinates of the closest cell from organism and save them in array)
+            for (i = 0; i < organismDistances.length; i++) {
+                if (minDist === organismDistances[i])
+                    closestOrganisms.push(allOrganisms[i]);
+            }
+
+            // Choosing randomly one closest organism
+            endPoint = closestOrganisms[Graphics.getRandomInt(0, closestOrganisms.length - 1)].getClosestCell(y, x);
+
+            // Determine the direction, dp stands for directionPoint (vector), [y,x]
+            // and rotate patterns
+            var dp = [endPoint[0] - y, endPoint[1] - x];
+
+            if (dp[0] < 0 && dp[1] < 0) pattern = glider;               // North-West
+            if (dp[0] < 0 && dp[1] > 0) pattern = rotate(R90, glider, 1); // North-East
+            if (dp[0] > 0 && dp[1] > 0) pattern = rotate(R90, glider, 2); // South-East
+            if (dp[0] > 0 && dp[1] < 0) pattern = rotate(R90, glider, 3); // South-West
+
+            if (dp[0] === 0 && dp[1] < 0) pattern = smallFish;               // West
+            if (dp[0] < 0 && dp[1] === 0) pattern = rotate(R90, smallFish, 1); // North
+            if (dp[0] === 0 && dp[1] > 0) pattern = rotate(R90, smallFish, 2); // East
+            if (dp[0] > 0 && dp[1] === 0) pattern = rotate(R90, smallFish, 3); // South
+
+        /**/// SEND GLIDER OR LIGHTWEIGHT SPACESHIP WITH THE RIGHT ROTATION TOWARDS THE CLOSEST ORGANISM
+
+            // Redraw the starting point to make it the same color as other live cells in given mode
+            Graphics.drawCell(y, x, true, false);
+            Life.nextGen[y][x] = false;
+
+            addToNextGen(pattern);
+        }
+
+        // All starting points have been drawn, removing starting points
+        Life.startPoints = new Array();
     },
 
     /* Produces next state. */
@@ -572,29 +833,31 @@ var Life =
 
         Life.generation++;
 
-        for (x = 0; x < Life.cellsX; x++)
+        // Next generation is the same as previous
+        for (y = 0; y < Life.cellsY; y++) 
         {
-            for (y = 0; y < Life.cellsY; y++)
+            for (x = 0; x < Life.cellsX; x++)
             {
-                Life.nextGen[x][y] = Life.prevGen[x][y];
+                Life.nextGen[y][x] = Life.prevGen[y][x];
             }
         }
 
-        for (x = 0; x < Life.cellsX; x++)
+        // Rewriting only cells to which Conway's GoL rules apply
+        for (y = 0; y < Life.cellsY; y++) 
         {
-            for (y = 0; y < Life.cellsY; y++)
+            for (x = 0; x < Life.cellsX; x++)
             {
-                count = Life.neighbourCount(x, y);
+                count = Life.neighbourCount(y, x);
 
                 // Game of Life rules
-                if (Life.prevGen[x][y])                // A live cell with two or three live neighbors stays alive (survival)
+                if (Life.prevGen[y][x])                 // A live cell with two or three live neighbors stays alive (survival)
                 {
                     if (count < 2 || count > 3)         // (live cell dies if no. of neighbours is not 2 or 3)
                     {
-                        Life.nextGen[x][y] = false;
+                        Life.nextGen[y][x] = false;
                     }
                 } else if (count === 3) {               // A dead cell with exactly three live neighbors becomes a live cell (birth).
-                    Life.nextGen[x][y] = true;          // (dead cell stays dead cell)
+                    Life.nextGen[y][x] = true;          // (otherwise dead cell stays dead cell)
                 }
             }
         }
@@ -607,12 +870,13 @@ var Life =
         else stats.innerHTML = Life.generation;
 
         Graphics.smartPaint();
-        
-        for (x = 0; x < Life.cellsX; x++)
+
+        // Forgetting previous generation (previous gen becomes current)
+        for (y = 0; y < Life.cellsY; y++) 
         {
-            for (y = 0; y < Life.cellsY; y++)
+            for (x = 0; x < Life.cellsX; x++)
             {
-                Life.prevGen[x][y] = Life.nextGen[x][y];
+                Life.prevGen[y][x] = Life.nextGen[y][x];
             }
         }
     },
@@ -652,7 +916,7 @@ var Life =
                 else
                     cellsY = yPattern;
 
-                Life.initUniverse(cellsX, cellsY);
+                Life.initUniverse(cellsY, cellsX);
 
                 // For too big canvas size, the canvas will become scrollable
                 if ((cellsX > screen.availWidth) || (cellsY > screen.availWidth))
@@ -670,8 +934,8 @@ var Life =
                     while (line) {
                         if (line.charAt(0) === 'o' || line.charAt(0) === 'b') {
                             if (line.charAt(0) === 'o') {
-                                Life.prevGen[x][y] = true;
-                                Graphics.drawCell(x, y, true, false);
+                                Life.prevGen[y][x] = true;
+                                Graphics.drawCell(y, x, true, false);
                             }
                             x++;
                             line = line.substring(1);
@@ -685,8 +949,8 @@ var Life =
                             }
                             if (line.charAt(0) === 'o') {
                                 for (j = 0; j < length; j++) {
-                                    Life.prevGen[x + j][y] = true;
-                                    Graphics.drawCell(x + j, y, true, false);
+                                    Life.prevGen[y][x + j] = true;
+                                    Graphics.drawCell(y, x + j, true, false);
                                 }
                             }
                             x += length;
@@ -704,20 +968,21 @@ var Life =
         var x,
             y;
        
-        for (x = 0; x < Life.cellsX; x++)
+        // Setting both generations to dead state
+        for (y = 0; y < Life.cellsY; y++) 
         {
-            for (y = 0; y < Life.cellsY; y++)
+            for (x = 0; x < Life.cellsX; x++)
             {
-                Life.nextGen[x][y] = false;
-                Life.prevGen[x][y] = false;
-                Graphics.drawCell(x, y, Life.nextGen[x][y], false);
+                Life.nextGen[y][x] = false;
+                Life.prevGen[y][x] = false;
+                Graphics.drawCell(y, x, Life.nextGen[y][x], false);
             }
         }
 
         Life.generation = 0;
         stats.innerHTML = Life.generation;
 
-        // Set values for algorithm
+        // Set values for function "Life.userSelection"
         Life.xUpperLeft = 0;
         Life.yUpperLeft = 0;
         Life.xLowerRight = Life.cellsX - Life.gliderSize;
