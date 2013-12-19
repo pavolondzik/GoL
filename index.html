@@ -15,7 +15,7 @@
             <header id="Header">
                 <div id="tabs">
                   <ul>
-                    <li><a href="#tabs-1">Life / Generation</a></li>
+                    <li><a href="#tabs-1">Home</a></li>
                     <li><a href="#tabs-2">Patterns</a></li>
                     <li><a href="#tabs-3">Graphics</a></li>
                     <li><a href="#tabs-4">Task</a></li>
@@ -48,10 +48,10 @@
                         <button id="clear" type="button" >Clear</button>
                         <hr /><span>Controls</span>
                     </div>  
-                    <div class="buttonGroup">    
-                        <button id="minus" type="button" >-</button>
-                        Speed: <span id="speed">90</span>/100
-                        <button id="plus" type="button" >+</button>
+                    <div class="buttonGroup">
+                        <label for="speed">Set value: </label>
+                        <input type="text" id="input-speed">
+                        <div class="slider-text"><span>1</span><div id="slider-speed"></div><span>100</span></div>
                         <hr /><span>Speed</span>
                     </div>
                     <div class="buttonGroup">
@@ -105,12 +105,10 @@
                   </div>
                   <div id="tabs-3" class="tab">
                     <div class="buttonGroup">
-                        <label for="automatic">Automatic: </label>
-                        <input name="automatic" value="automatic" type="checkbox" >
                         <label for="spinnerX">Cells X:</label>
-                        <input id="spinnerX" name="value" />
+                        <input id="spinnerX" name="canvasSize" type="text"/>
                         <label for="spinnerY">Cells Y:</label>
-                        <input id="spinnerY" name="value" />
+                        <input id="spinnerY" name="canvasSize" type="text"/>
                         <hr /><span>Size</span>
                     </div>
                     <div class="buttonGroup">

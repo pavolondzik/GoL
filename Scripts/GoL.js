@@ -421,7 +421,7 @@ var Life =
         Life.cellsY = cellsY;
         Life.cellsX = cellsX;
 
-        // Set values for algorithm
+        // Set values for function Life.userSelection()
         Life.xUpperLeft = 0;
         Life.yUpperLeft = 0;
         Life.xLowerRight = Life.cellsX - Life.gliderSize;
@@ -463,28 +463,18 @@ var Life =
         else
         {
             Life.alive = true;
-            Life.timeout = setInterval(Life.nextGen, Life.speed);
+            Life.timeout = setInterval(Life.nextGeneration, Life.speed);
         }
     },
 
-    changeSpeed: function (faster)
+    changeSpeed: function (speedMeasure)
     {
-        if (faster) {
-            if (Life.speed === 0) {
-                return;
-            }
-            Life.speed -= 10;
-
-        } else {
-            if (Life.speed === 1000) {
-                return;
-            }
-            Life.speed += 10;
-        }
+        if ((speedMeasure < 1) || (speedMeasure > 100)) return;
+        Life.speed = 1000 - 10 * speedMeasure;
 
         if (Life.alive) {
             clearInterval(Life.timeout);
-            Life.timeout = setInterval(Life.nextGen, Life.speed);
+            Life.timeout = setInterval(Life.nextGeneration, Life.speed);
         }
     },
 
@@ -493,7 +483,8 @@ var Life =
     {
         var count = 0,
             i,
-            neighbours = [ // Clockwise direction
+            neighbourCells = new Array();
+            neighbourCells = [ // Clockwise direction
                 Life.prevGen[y][(x - 1 + Life.cellsX) % Life.cellsX],
                 Life.prevGen[(y + 1 + Life.cellsY) % Life.cellsY][(x - 1 + Life.cellsX) % Life.cellsX],
                 Life.prevGen[(y + 1 + Life.cellsY) % Life.cellsY][x],
@@ -505,8 +496,8 @@ var Life =
             ];
 
         // If neighbour alive (true), add him up
-        for (i = 0; i < neighbours.length; i++) {
-            if (neighbours[i]) {
+        for (i = 0; i < neighbourCells.length; i++) {
+            if (neighbourCells[i]) {
                 count++;
             }
         }
@@ -526,7 +517,7 @@ var Life =
 
         for (j = y - 1; j < y + 2; j++) {
             for (i = x - 1; i < x + 2; i++) {
-                if ((i > -1) && (j > -1) && (i < cellsX) && (j < cellsY))
+                if ((i > -1) && (j > -1) && (i < Life.cellsX) && (j < Life.cellsY))
                     if ((i == x) && (j == y)) continue;
                     else if (Life.nextGen[j][i]) array.push(new Cell(j,i,Life.nextGen[j][i]));
             }
@@ -825,7 +816,7 @@ var Life =
     },
 
     /* Produces next state. */
-    nextGen: function ()
+    nextGeneration: function ()
     {
         var x,
             y,

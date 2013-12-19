@@ -5,6 +5,7 @@
 }
 
 canvas {
+    border: 1px solid black;/* DELETE*/
     padding-left: 0;
     padding-right: 0;
     margin-left: auto;
@@ -36,7 +37,7 @@ header {
     border-radius: 5px;
 }
 
-/* Gradient transparent - color - transparent */	
+/* Horizontal line */	
 /* http://css-tricks.com/simple-styles-for-horizontal-rules/ */	
 div.container hr {
     border: 0;
@@ -45,4 +46,24 @@ div.container hr {
     background-image:    -moz-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
     background-image:     -ms-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
     background-image:      -o-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
+}
+
+/* Styles for slider */
+#input-speed {
+    border:0; 
+    color:#f6931f; 
+    font-weight:bold;
+}
+
+div.slider-text *{
+    float: left;
+    width: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+    font-weight: bold;
+}
+
+#slider-speed {
+    float: left;
+    width: 200px;
 }
