@@ -744,7 +744,7 @@ var Life =
             y = coordinates[0];
             x = coordinates[1];
             // Exit if coordinates are out of canvas boundaries
-            if ((x > (Life.cellsX - 3)) || (y > (Life.cellsY - 3)))
+            if ((x > (Life.cellsX - 3)) || (y > (Life.cellsY - 3)) || (x < 3) || (y < 3))
                 continue;
 
             // Detect alive neigbours of starting point, OR count = Life.neighbourCount(x, y);
@@ -881,7 +881,8 @@ var Life =
         $.ajax({
             url: url,
             success: function (data) {
-                var match = data.match(/x\s=\s(\d*).*?y\s=\s(\d*).*\r([^]*)!/),
+                var rpattern = RegExp(/x\s=\s(\d*).*?y\s=\s(\d*).*\r([^]*)!/),
+                    match =  data.match(rpattern),
                     x,
                     y,
                     xPattern = parseInt(match[1], 10),      // Pattern dimensions
