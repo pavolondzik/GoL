@@ -9,7 +9,6 @@
 /* (Global) Variables */
 
 var stats = document.getElementById("stats");
-//var radios = document.getElementsByName('selectionMode');
 var message = document.getElementById('message');
 
 var canvas = document.getElementById("Universe");
@@ -197,9 +196,9 @@ var Graphics =
             return new Array();
         }
 
-        if (event.x != undefined && event.y != undefined) {
-            x = event.x;
-            y = event.y;
+        if (event.pageX != undefined && event.pageY != undefined) {
+            x = event.pageX;
+            y = event.pageY;
         }
         else // Firefox method to get the position
         {
@@ -298,7 +297,7 @@ var Graphics =
         }
     },
 
-    printMessage: function (y, x, text) {
+    printMessage: function (y, x, text, color) {
         // Visibility
         message.style.backgroundColor = "lightGrey";
         message.style.opacity = "0.9";
@@ -308,7 +307,7 @@ var Graphics =
         message.innerHTML = text;
 
         // Format
-        message.style.color = "#008b8b";    // Dark cyan
+        message.style.color = color;
         message.style.fontFamily = "Times New Roman";
         message.style.fontSize = "32px";
 
@@ -367,9 +366,8 @@ var Graphics =
 
         // Display div to invite user to select
         // starting point for gliders
-        Graphics.printMessage(canvas.offsetTop + Math.floor(canvas.height / 2),
-                              canvas.offsetLeft + Math.floor(canvas.width / 2),
-                              "Set starting point for gliders please.");
+        Graphics.printMessage(Math.floor(window.innerHeight / 2), Math.floor(window.innerWidth / 2),
+                              "Set starting point for gliders please.", "#008b8b");// Dark cyan
     },
 
     /* Changes display mode of the cell. */
@@ -855,9 +853,9 @@ var Life =
         }
 
         // Adding life forms to next generation
-        if (Life.radios['userRadioBtn'].checked)
+        if (Life.radios[1].checked) //'userRadioBtn'
             Life.userSelection();
-        else if (Life.radios['automaticRadioBtn'].checked)
+        else if (Life.radios[2].checked) // 'automaticRadioBtn'
             Life.automaticSelection();
         else stats.innerHTML = Life.generation;
 
@@ -900,9 +898,9 @@ var Life =
                     spinnerY = $("#spinnerY").spinner();
 
                 if (match === null) {
-                    Graphics.printMessage(canvas.offsetTop + Math.floor(canvas.height / 2),
-                                          canvas.offsetLeft + Math.floor(canvas.width / 2),
-                                          "Set starting point for gliders please.");
+                    Graphics.printMessage(Math.floor(window.innerHeight / 2),
+                                          Math.floor(window.innerWidth / 2),
+                                          "Error loading pattern.", "red");
                     return;
                 }
 
