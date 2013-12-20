@@ -9,7 +9,7 @@
 /* (Global) Variables */
 
 var stats = document.getElementById("stats");
-var radios = document.getElementsByName('selectionMode');
+//var radios = document.getElementsByName('selectionMode');
 var message = document.getElementById('message');
 
 var canvas = document.getElementById("Universe");
@@ -414,6 +414,7 @@ var Life =
     yLowerRight: new Number(0),
     lifeExists: false,
     startPoints: new Array(), // Starting Points For Gliders
+    radios:     document.getElementsByName('selectionMode'),
 
     /* Sets matrix(universe) states and draws canvas matrix. */
     initUniverse: function (cellsY, cellsX)
@@ -854,9 +855,9 @@ var Life =
         }
 
         // Adding life forms to next generation
-        if (radios['userRadioBtn'].checked)
+        if (Life.radios['userRadioBtn'].checked)
             Life.userSelection();
-        else if (radios['automaticRadioBtn'].checked)
+        else if (Life.radios['automaticRadioBtn'].checked)
             Life.automaticSelection();
         else stats.innerHTML = Life.generation;
 
@@ -881,30 +882,42 @@ var Life =
         $.ajax({
             url: url,
             success: function (data) {
-                var rpattern = RegExp(/x\s=\s(\d*).*?y\s=\s(\d*).*\r([^]*)!/),
+                var rpattern = RegExp(/x\s=\s(\d*).*?y\s=\s(\d*).*[\r\n]([^]*)!/),
                     match =  data.match(rpattern),
                     x,
                     y,
-                    xPattern = parseInt(match[1], 10),      // Pattern dimensions
-                    yPattern = parseInt(match[2], 10),
-                    pattern = match[3].replace(/\s+/g, ""), // Remove whitespace
-                    lines = pattern.split('$'),
+                    xPattern,      // Pattern dimensions
+                    yPattern,
+                    pattern,       // Remove whitespace
+                    lines,
                     i,
                     j,
                     line,
                     length,
-                    cellsX,                                 // Canvas dimensions
+                    cellsX,        // Canvas dimensions
                     cellsY,
                     spinnerX = $("#spinnerX").spinner(),
                     spinnerY = $("#spinnerY").spinner();
+
+                if (match === null) {
+                    Graphics.printMessage(canvas.offsetTop + Math.floor(canvas.height / 2),
+                                          canvas.offsetLeft + Math.floor(canvas.width / 2),
+                                          "Set starting point for gliders please.");
+                    return;
+                }
+
+                xPattern = parseInt(match[1], 10);      // Pattern dimensions
+                yPattern = parseInt(match[2], 10);
+                pattern = match[3].replace(/\s+/g, ""); // Remove whitespace
+                lines = pattern.split('$');
                 
                 // Setting size of the canvas
-                if (spinnerX.spinner('value') > xPattern)
-                    cellsX = spinnerX.spinner('value');
+                if (parseInt(spinnerX.spinner('value'),10) > xPattern)
+                    cellsX = parseInt(spinnerX.spinner('value'),10);
                 else
                     cellsX = xPattern;
-                if (spinnerY.spinner('value') > yPattern)
-                    cellsY = spinnerY.spinner('value');
+                if (parseInt(spinnerY.spinner('value'),10) > yPattern)
+                    cellsY = parseInt(spinnerY.spinner('value'),10);
                 else
                     cellsY = yPattern;
 
