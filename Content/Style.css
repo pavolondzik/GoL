@@ -4,6 +4,12 @@
     font-size: 62.5%;
 }
 
+#Container {
+    position:absolute;
+    top:0px;
+    left:0px;
+}
+
 canvas {
     padding-left: 0;
     padding-right: 0;
@@ -11,13 +17,26 @@ canvas {
     margin-right: auto;
     display: block;
 }
-
+/* Fixed floating element */	
+/* http://jqueryfordesigners.com/fixed-floating-elements/ */
 header {
-    margin-bottom:10px;
+    position:absolute;
+    top: 0;
+    margin-top: 0px;
+    padding-top: 0px;
+    overflow:hidden;
 }
+/*
+header.fixed {
+  position: fixed;
+  top: 0;
+  overflow:hidden;
+}*/
+/**/
 
 .tab {
     height:80px;
+    width: 960px;
 }
 
 .buttonGroup {
@@ -27,7 +46,8 @@ header {
     float: left;
     height: 55px;
     margin-left: 5px;
-	padding: 1em;
+	padding: 10px;
+    position: relative;
     text-align:left;
     width: auto;
     
@@ -36,15 +56,24 @@ header {
     border-radius: 5px;
 }
 
+div.buttonGroupLabel {
+    bottom: 8px;
+    display:block;
+    left:auto;    
+    position:absolute;
+    text-align:left;
+    width:80%;
+}
+
 /* Horizontal line */	
 /* http://css-tricks.com/simple-styles-for-horizontal-rules/ */	
-div.container hr {
-    border: 0;
-    height: 1px;
+div.buttonGroup hr {
     background-image: -webkit-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
     background-image:    -moz-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
     background-image:     -ms-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
     background-image:      -o-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
+    border: 0;
+    height: 1px;
 }
 
 /* Styles for slider "speed" */

@@ -1,13 +1,16 @@
 ﻿$(document).ready(function () {
     var start_value = 'Start Life';
     var stop_value = 'Stop Life';
+
+    var initHeight = Math.floor(window.innerHeight / 10);
+    var initWidth = Math.floor(window.innerWidth / 10);
     
     // Creating tabs
     $("#tabs").tabs();
     
     // Setting Universe dimensions
-    var spinnerX = $("#spinnerX").spinner({ min: 20, max: 100 }).val(80);
-    var spinnerY = $("#spinnerY").spinner({ min: 20, max: 100 }).val(40);
+    var spinnerX = $("#spinnerX").spinner({ min: 20, max: 200 }).val(initWidth);
+    var spinnerY = $("#spinnerY").spinner({ min: 20, max: 200 }).val(initHeight);
 
     var SpinnerCellsX = parseInt(spinnerX.val(),10);
     var SpinnerCellsY = parseInt(spinnerY.val(),10);
@@ -177,5 +180,47 @@
             }
         }
     });
-/* STOP HOME > SELECTION MODE > CREATE GLIDER  */
+    /* STOP HOME > SELECTION MODE > CREATE GLIDER  */
+
+    /* FIXED FLOATING ELEMENTS */
+    /* http://jqueryfordesigners.com/fixed-floating-elements/ */
+    function floatElement() {
+        var top = $('#Header').offset().top - parseFloat($('#Header').css('marginTop').replace(/auto/, 0));
+        $(window).scroll(function (event) {
+            // what the y position of the scroll is
+            var y = $(this).scrollTop();
+
+            // whether that's below the form
+            if (y >= top) {
+                // if so, ad the fixed class
+                $('#Header').addClass('fixed');
+            } else {
+                // otherwise remove it
+                $('#Header').removeClass('fixed');
+            }
+        });
+    }
+    // Creating dialog window
+    /* https://github.com/ROMB/jquery-dialogextend */
+    $(function () {
+        $("#Header")
+        .dialog({
+            "title": "Settings",
+            maxWidth: 1010,
+            maxHeight: 200,
+            width: 1010,
+            height: 200
+        })
+        .dialogExtend({
+            "closable": false,
+            "collapsable": true,
+            "minimizable": true,
+            "dblclick": "minimize",
+            "icons": {
+                "collapse": "ui-icon-triangle-1-s",
+                "minimize": "ui-icon-circle-minus"
+            },
+            "load": function (evt, dlg) { /*floatElement();alert(evt.type);*/ }
+        });
+    });
 });
