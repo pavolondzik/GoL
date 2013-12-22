@@ -206,10 +206,12 @@
         $("#Header")
         .dialog({
             "title": "Settings",
-            maxWidth: 1010,
-            maxHeight: 200,
-            width: 1010,
-            height: 200
+            "maxWidth": 1010,
+            "maxHeight": 190,
+            "width": 1010,
+            "height": 190,
+            "minWidth": 300,
+            "minHeight": 190
         })
         .dialogExtend({
             "closable": false,
