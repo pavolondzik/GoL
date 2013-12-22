@@ -9,6 +9,7 @@
         <link rel="stylesheet" href="Content/Style.css" />
         <script src="Scripts/jquery-1.9.1.js"></script>
         <script src="Scripts/jquery-ui-1.10.3.custom.js"></script>
+        <script src="Scripts/jquery.dialogextend.min.js"></script>
     </head>
     <body>
         <div id="Container">
@@ -40,23 +41,23 @@
                                 id = "automaticRadioBtn"
                                 value = "auto" />
                         <label for = "automaticRadioBtn">Create Glider</label>
-                        <hr /><span>Selection Mode</span>
+                        <div class="buttonGroupLabel"><hr /><span>Selection Mode</span></div>
                     </div>
                     <div class="buttonGroup">
                         <button id="start" type="button" >Start Life</button>
                         <button id="nextGen" type="button" >Next Generation &gt;</button>
                         <button id="clear" type="button" >Clear</button>
-                        <hr /><span>Controls</span>
+                        <div class="buttonGroupLabel"><hr /><span>Controls</span></div>
                     </div>  
                     <div class="buttonGroup">
                         <label for="speed">Set value: </label>
-                        <input type="text" id="input-speed">
-                        <div class="slider-text"><span>1</span><div id="slider-speed"></div><span>100</span></div>
-                        <hr /><span>Speed</span>
+                        <input type="text" id="input-speed" />
+                        <div class="slider-text"><span>1</span><div id="slider-speed"></div><span>100</span></div><br />
+                        <div class="buttonGroupLabel"><hr /><span>Speed</span></div>
                     </div>
                     <div class="buttonGroup">
-                        Generation: <output id="stats"></output>
-                        <hr /><span>Stats</span>
+                            Generation: <output id="stats"></output>
+                        <div class="buttonGroupLabel"><hr /><span>Stats</span></div>
                     </div>
                   </div>
                   <div id="tabs-2" class="tab">
@@ -98,7 +99,7 @@
                             <option value="Patterns/unidimensionalfourgliders.rle">Unidimensional four gliders</option>
                             <option value="Patterns/unidimensionalsixgliders.rle">Unidimensional six gliders</option>
                           </select>
-                        <hr /><span>Patterns</span>
+                        <div class="buttonGroupLabel"><hr /><span>Patterns</span></div>
                     </div>
                   </div>
                   <div id="tabs-3" class="tab">
@@ -107,7 +108,7 @@
                         <input id="spinnerX" name="canvasSize" type="text"/>
                         <label for="spinnerY">Cells Y:</label>
                         <input id="spinnerY" name="canvasSize" type="text"/>
-                        <hr /><span>Size</span>
+                        <div class="buttonGroupLabel"><hr /><span>Size</span></div>
                     </div>
                     <div class="buttonGroup">
                         Change Mode:
@@ -117,12 +118,12 @@
                             <option value="TRAIL">Trail</option>
                             <option value="TRAILNOGRID">Trail without grid</option>
                         </select>
-                        <hr /><span>Display Mode</span>
+                        <div class="buttonGroupLabel"><hr /><span>Display Mode</span></div>
                     </div>
                   </div>
                   <div id="tabs-4" class="tab">
                     <section>
-                        <h3>Emergence: Cellular Automata</h3>
+                        <b>Emergence: Cellular Automata</b>
                         <p>Create an interactive implementation of the Game of Life grid, where a player can select starting points for a variety of blinkers. The system then sends gliders to destroy them, resulting in chaos. Alternatively, system randomly sets some blinkers and player sets starting point for gliders. Documentation should clearly explain algorithms used to generate the life-forms.</p>
                     </section>
                   </div>
