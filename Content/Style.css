@@ -17,22 +17,11 @@ canvas {
     margin-right: auto;
     display: block;
 }
-/* Fixed floating element */	
-/* http://jqueryfordesigners.com/fixed-floating-elements/ */
-header {
-    position:absolute;
-    top: 0;
-    margin: 0px;
-    padding: 0px;
+
+#cgol {
     overflow:hidden !important;
 }
-/*
-header.fixed {
-  position: fixed;
-  top: 0;
-  overflow:hidden;
-}*/
-/**/
+
 
 .tab {
     height:80px;
@@ -76,14 +65,14 @@ div.buttonGroup hr {
     height: 1px;
 }
 
-/* Styles for slider "speed" */
-#input-speed {
+/* Styles for slider speed controls */
+.inputSpeed {
     border:0; 
     color:#f6931f; 
     font-weight:bold;
 }
 
-div.slider-text *{
+div.sliderText *{
     float: left;
     width: 10px;
     margin-left: 5px;
@@ -91,7 +80,12 @@ div.slider-text *{
     font-weight: bold;
 }
 
-#slider-speed {
+div.sliderSpeed {
     float: left;
     width: 200px;
+}
+
+/* Rule 30 */
+#rule30 {
+    overflow:hidden !important;
 }
