@@ -3,17 +3,18 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Game of Life</title>
+        <title>Cellular Automata</title>
         <link rel="stylesheet" href="Content/overcast/jquery-ui.css" />
         <link rel="stylesheet" href="Content/overcast/jquery-ui-1.10.3.custom.css" />
+        <link rel="stylesheet" href="Content/dark-hive/jquery-ui-1.10.3.custom.min.css" />
         <link rel="stylesheet" href="Content/Style.css" />
         <script src="Scripts/jquery-1.9.1.js"></script>
         <script src="Scripts/jquery-ui-1.10.3.custom.js"></script>
         <script src="Scripts/jquery.dialogextend.min.js"></script>
     </head>
     <body>
-        <div id="Container">
-            <header id="Header">
+        <div id="Container" class="darkHive">
+            <div id="cgol">
                 <div id="tabs">
                   <ul>
                     <li><a href="#tabs-1">Home</a></li>
@@ -50,9 +51,9 @@
                         <div class="buttonGroupLabel"><hr /><span>Controls</span></div>
                     </div>  
                     <div class="buttonGroup">
-                        <label for="speed">Set value: </label>
-                        <input type="text" id="input-speed" />
-                        <div class="slider-text"><span>1</span><div id="slider-speed"></div><span>100</span></div><br />
+                        <label for="input-speed">Set value: </label>
+                        <input type="text" id="input-speed" class="inputSpeed" />
+                        <div class="sliderText"><span>1</span><div id="slider-speed" class="sliderSpeed"></div><span>100</span></div><br />
                         <div class="buttonGroupLabel"><hr /><span>Speed</span></div>
                     </div>
                     <div class="buttonGroup">
@@ -128,7 +129,45 @@
                     </section>
                   </div>
                </div>
-            </header>
+            </div>
+            
+            <div id="rule30">
+                <div id="rule30tabs">
+                  <ul>
+                    <li><a href="#rule30tabs-1">Home</a></li>
+                    <li><a href="#rule30tabs-2">Task</a></li>
+                  </ul>
+                  <div id="rule30tabs-1" class="tab">
+                    <div class="buttonGroup">
+                        <button id="startRule30" type="button" >Start rule 30</button>
+                        <button id="nextGenRule30" type="button" >Next Generation &gt;</button>
+                        <button id="clearRule30" type="button" >Clear</button>
+                        <div class="buttonGroupLabel"><hr /><span>Controls</span></div>
+                    </div>  
+                    <div class="buttonGroup">
+                        <label for="inputSpeedRule30">Set value: </label>
+                        <input type="text" id="inputSpeedRule30" class="inputSpeed"/>
+                        <div class="sliderText"><span>1</span><div id="sliderSpeedRule30" class="sliderSpeed"></div><span>100</span></div><br />
+                        <div class="buttonGroupLabel"><hr /><span>Speed</span></div>
+                    </div>
+                    <div class="buttonGroup">
+                            Generation: <output id="statsRule30"></output>
+                        <div class="buttonGroupLabel"><hr /><span>Stats</span></div>
+                    </div>
+                  </div>
+                  <div id="rule30tabs-2" class="tab">
+                     <section>
+                        <b>Elementary cellular automaton, Rule 30</b><br />
+                            Binary representation of number 30 is 00011110 (little endian). This number is composed of all
+                            possible configurations for a cell and its two<br />immediate neighbors (left and right neigbour).
+                            These configurations have following order: 111, 110, 101, 100, 011, 010, 001, 000. First<br />configuration
+                            (000) from right has assigned right-most bit 0, second (001) has 1, etc. The binary number (00011110)
+                            is taken to be<br /> the rule number of the automaton.
+                    </section>
+                  </div>
+                </div>
+            </div>
+
             <div id="Solution">
                 <output id="message"></output>
                 <canvas id="Universe">
@@ -138,5 +177,6 @@
         </div>
         <script src = "Scripts/GoL.js" ></script>
         <script src = "Scripts/Controls.js"></script> 
+        <script src = "Scripts/Rule30.js"></script>
     </body>
 </html>

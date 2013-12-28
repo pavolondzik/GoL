@@ -297,6 +297,18 @@ var Graphics =
         }
     },
 
+    paintNextLine: function (y)
+    {
+        var x;
+            
+        for (x = 0; x < Life.cellsX; x++) {
+            //if (Life.prevGen[y][x] !== Life.nextGen[y][x]) {
+                Graphics.drawCell(y, x, Life.prevGen[y][x], false);
+            //}
+        }
+        
+    },
+
     printMessage: function (y, x, text, color) {
         // Visibility
         message.style.backgroundColor = "lightGrey";
@@ -401,6 +413,7 @@ var Life =
     speed:      new Number(100),
     timeout:    new Number(),
     alive:      false,
+    cgolOn:     true,          // Conway's game of life is on or off
     cellsX:     new Number(20), // no. of cells
     cellsY:     new Number(20),
     generation: new Number(0),
@@ -462,7 +475,8 @@ var Life =
         else
         {
             Life.alive = true;
-            Life.timeout = setInterval(Life.nextGeneration, Life.speed);
+            if (Life.cgolOn) Life.timeout = setInterval(Life.nextGeneration, Life.speed);
+            else Life.timeout = setInterval(Life.nextGenerationRule30, Life.speed);
         }
     },
 
@@ -473,7 +487,8 @@ var Life =
 
         if (Life.alive) {
             clearInterval(Life.timeout);
-            Life.timeout = setInterval(Life.nextGeneration, Life.speed);
+            if (Life.cgolOn) Life.timeout = setInterval(Life.nextGeneration, Life.speed);
+            else Life.timeout = setInterval(Life.nextGenerationRule30, Life.speed);
         }
     },
 
@@ -871,6 +886,42 @@ var Life =
         }
     },
 
+    nextGenerationRule30: function () {
+        var x,
+            y = Life.generation,
+            intval;
+
+        if ((y + 1) >= Life.cellsY) {
+            Life.alive = false;
+            clearInterval(Life.timeout);
+            $('#startRule30').text('Start rule 30');
+            Life.generation = 0;
+            $('#statsRule30').text(Life.generation + 1);
+            return;
+        }
+
+        for (x = 1; x < Life.cellsX - 1; x++) {
+            intval = Life.prevGen[y][x - 1] << 2 | Life.prevGen[y][x] << 1 | Life.prevGen[y][x + 1];
+            switch (intval) {
+                // Birth
+                case 1: // 001
+                case 4: // 100
+                    // Survival
+                case 2: // 010
+                case 3: // 011
+                    Life.prevGen[y + 1][x] = true;
+                    break;
+                default:
+                    Life.prevGen[y + 1][x] = false;
+            }
+        }
+
+        // Advance generation
+        Life.generation++;
+        Graphics.paintNextLine(Life.generation);
+        $('#statsRule30').text(Life.generation + 1);
+    },
+
     // Parses files in Run Length Encoded Format
     // http://www.conwaylife.com/wiki/RLE
     loadPattern:   function (url) {
@@ -919,6 +970,10 @@ var Life =
                 else
                     cellsY = yPattern;
 
+                // Updating spinner controls
+                $("#spinnerX").spinner('value', cellsX);
+                $("#spinnerY").spinner('value', cellsY);
+
                 Life.initUniverse(cellsY, cellsX);
 
                 // For too big canvas size, the canvas will become scrollable
@@ -926,7 +981,7 @@ var Life =
                     canvas.style.overflow = 'scroll';
 
                 // Move pattern to the middle of the screen (subtracting pattern dimension)
-                // minus one because array index starts from 0
+                // minus one, because array index starts from 0
                 x = Math.floor(Life.cellsX / 2) - Math.floor(xPattern / 2) -1;
                 y = Math.floor(Life.cellsY / 2) - Math.floor(yPattern / 2) -1;
 
@@ -981,9 +1036,14 @@ var Life =
                 Graphics.drawCell(y, x, Life.nextGen[y][x], false);
             }
         }
-
         Life.generation = 0;
-        stats.innerHTML = Life.generation;
+
+        if (Life.cgolOn) {
+            stats.innerHTML = Life.generation;
+        }
+        else {
+            $('#statsRule30').text(Life.generation + 1);
+        }
 
         // Set values for function "Life.userSelection"
         Life.xUpperLeft = 0;

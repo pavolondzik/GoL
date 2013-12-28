@@ -1,7 +1,8 @@
 ﻿$(document).ready(function () {
-    var start_value = 'Start Life';
-    var stop_value = 'Stop Life';
+    var startLife = 'Start Life';
+    var stopLife = 'Stop Life';
 
+    // Initial canvas size
     var initHeight = Math.floor(window.innerHeight / 10);
     var initWidth = Math.floor(window.innerWidth / 10);
     
@@ -63,32 +64,22 @@
 /* START HOME > CONTROLS */
     $('#start').click(function () {
         var text = $(this).text();
-        if (text === start_value)
-            $(this).text(stop_value);
-        else $(this).text(start_value);
+        if (text === startLife)
+            $(this).text(stopLife);
+        else $(this).text(startLife);
+        Life.cgolOn = true;
         Life.toggleLife();
     });
 
     $('#nextGen').click(function () {
-        Life.nextGeneration()
+        Life.cgolOn = true;
+        Life.nextGeneration();
     });
 
     $('#clear').click(function () {
         Life.clearUniverse();
     });
 /* STOP HOME > CONTROLS */
-
-/* START HOME > PATTERNS */
-    // Loading pattern
-    $('#patterns').change(function () {
-        $('#patterns option:selected').each(function () {
-            url = $(this).val();
-            if (url) {
-                Life.loadPattern(url);
-            }
-        });
-    });
-/* STOP HOME > PATTERNS */
 
 /* START HOME > SPEED > SLIDER-SPEED */
     // Initializing slider
@@ -180,38 +171,33 @@
             }
         }
     });
-    /* STOP HOME > SELECTION MODE > CREATE GLIDER  */
+/* STOP HOME > SELECTION MODE > CREATE GLIDER  */
 
-    /* FIXED FLOATING ELEMENTS */
-    /* http://jqueryfordesigners.com/fixed-floating-elements/ */
-    function floatElement() {
-        var top = $('#Header').offset().top - parseFloat($('#Header').css('marginTop').replace(/auto/, 0));
-        $(window).scroll(function (event) {
-            // what the y position of the scroll is
-            var y = $(this).scrollTop();
-
-            // whether that's below the form
-            if (y >= top) {
-                // if so, ad the fixed class
-                $('#Header').addClass('fixed');
-            } else {
-                // otherwise remove it
-                $('#Header').removeClass('fixed');
+/* START PATTERNS > PATTERNS */
+    // Loading pattern
+    $('#patterns').change(function () {
+        $('#patterns option:selected').each(function () {
+            url = $(this).val();
+            if (url) {
+                Life.loadPattern(url);
             }
         });
-    }
-    // Creating dialog window
+    });
+/* STOP PATTERNS > PATTERNS */
+
+    // Creating dialog window "Conway's game of life"
     /* https://github.com/ROMB/jquery-dialogextend */
     $(function () {
-        $("#Header")
+        $("#cgol")
         .dialog({
-            "title": "Settings",
+            "title": "Conway's game of life",
             "maxWidth": 1010,
             "maxHeight": 190,
             "width": 1010,
             "height": 190,
             "minWidth": 300,
-            "minHeight": 190
+            "minHeight": 190,
+            "position": ['middle', 10]
         })
         .dialogExtend({
             "closable": false,
@@ -222,7 +208,26 @@
                 "collapse": "ui-icon-triangle-1-s",
                 "minimize": "ui-icon-circle-minus"
             },
-            "load": function (evt, dlg) { /*floatElement();alert(evt.type);*/ }
+            "load": function (evt, dlg) { },
+            "collapse": function (evt, dlg) {
+                var rule30State = $("#rule30").dialogExtend("state");
+                if (rule30State === 'normal' || rule30State === 'collapsed')
+                    $("#cgol").dialogExtend("minimize");
+            },
+            "restore": function (evt, dlg) {
+                var rule30State = $("#rule30").dialogExtend("state");
+                if (rule30State === 'normal' || rule30State === 'collapsed')
+                    $("#cgol").dialogExtend("minimize");
+                // Updating speed from control, because rule 30 has changed speed
+                var val = $("#slider-speed").slider("value");
+                Life.changeSpeed(val);
+                $(this).parents(".ui-dialog:first").removeClass("darkHive");
+            },
+            "minimize": function (evt, dlg) {
+                if (Life.alive && Life.cgolOn)
+                    $(this).parents(".ui-dialog:first").addClass("darkHive");
+            }
         });
     });
+
 });
