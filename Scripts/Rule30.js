@@ -11,8 +11,18 @@ $(document).ready(function () {
         if (text === startValue)
             $(this).text(stopValue);
         else $(this).text(startValue);
-        Life.cgolOn = false;
-        Life.toggleLife();
+        //if (Life.cgolOn) {
+        //    $("#cgol").parents(".ui-dialog:first").removeClass("darkHive");
+        //    //$("#start").text('Start Life');
+        //    Life.cgolOn = false;
+        //    clearInterval(Life.timeout);
+        //    Life.alive = true;
+        //    Life.timeout = setInterval(Life.nextGenerationRule30, Life.speed);
+        //}
+        //else {
+            Life.cgolOn = false;
+            Life.toggleLife();
+        //}
     });
 
     $('#nextGenRule30').click(function () {
@@ -84,7 +94,7 @@ $(document).ready(function () {
             "height": 190,
             "minWidth": 300,
             "minHeight": 190,
-            "position": ['middle', 10]
+            "position": ['middle', 'bottom']
         })
         .dialogExtend({
             "closable": false,
@@ -96,18 +106,18 @@ $(document).ready(function () {
                 "minimize": "ui-icon-circle-minus"
             },
             "load": function (evt, dlg) {
-                $("#rule30").dialogExtend("minimize");
+                $(this).dialogExtend("minimize");
             },
             "collapse": function (evt, dlg) {
                 var rule30State = $("#cgol").dialogExtend("state");
                 if (rule30State === 'normal' || rule30State === 'collapsed')
-                    $("#rule30").dialogExtend("minimize");
+                    $(this).dialogExtend("minimize");
             },
             "restore": function (evt, dlg) {
-                // Minimize window if Conway's game of life window is open
+                // Minimise Conway's game of life window
                 var rule30State = $("#cgol").dialogExtend("state");
                 if (rule30State === 'normal' || rule30State === 'collapsed')
-                    $("#rule30").dialogExtend("minimize");
+                    $("#cgol").dialogExtend("minimize");
                 // Window restored, execute code below:
                 // Set generation to one
                 Life.generation = 0;
