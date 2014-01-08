@@ -197,7 +197,7 @@
             "height": 190,
             "minWidth": 300,
             "minHeight": 190,
-            "position": ['middle', 10]
+            "position": ['middle', 'bottom']
         })
         .dialogExtend({
             "closable": false,
@@ -217,7 +217,7 @@
             "restore": function (evt, dlg) {
                 var rule30State = $("#rule30").dialogExtend("state");
                 if (rule30State === 'normal' || rule30State === 'collapsed')
-                    $("#cgol").dialogExtend("minimize");
+                    $("#rule30").dialogExtend("minimize");
                 // Updating speed from control, because rule 30 has changed speed
                 var val = $("#slider-speed").slider("value");
                 Life.changeSpeed(val);

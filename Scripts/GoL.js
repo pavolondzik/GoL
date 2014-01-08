@@ -302,9 +302,7 @@ var Graphics =
         var x;
             
         for (x = 0; x < Life.cellsX; x++) {
-            //if (Life.prevGen[y][x] !== Life.nextGen[y][x]) {
                 Graphics.drawCell(y, x, Life.prevGen[y][x], false);
-            //}
         }
         
     },
@@ -398,7 +396,7 @@ var Graphics =
 
     /**
      * Returns a random integer between min and max
-     * Using Math.round() will give you a non-uniform distribution!
+     * Using Math.round() will give a non-uniform distribution!
      */
     getRandomInt: function (min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -847,7 +845,7 @@ var Life =
             }
         }
 
-        // Rewriting only cells to which Conway's GoL rules apply
+        // Computing Conway's GoL next generation
         for (y = 0; y < Life.cellsY; y++) 
         {
             for (x = 0; x < Life.cellsX; x++)
@@ -890,7 +888,8 @@ var Life =
         var x,
             y = Life.generation,
             intval;
-
+		
+		// Stopping drawing after reaching end of canvas
         if ((y + 1) >= Life.cellsY) {
             Life.alive = false;
             clearInterval(Life.timeout);
