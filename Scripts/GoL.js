@@ -417,7 +417,7 @@ var Life =
     generation: new Number(0),
     //Algorithm variables
     gliderSize: new Number(3),
-    xUpperLeft: new Number(0),
+    xUpperLeft: new Number(0), // Coordinates for advancing glider
     yUpperLeft: new Number(0),
     xLowerRight: new Number(0),
     yLowerRight: new Number(0),
@@ -572,7 +572,7 @@ var Life =
             else Life.xLowerRight -= 7;
 
         }
-        // Saving corectly rotated two gliders to next generation
+        // Saving correctly rotated two gliders to next generation
         // (-1 means starting from generation 1)
         if ((Life.generation - 1) % 14 == 0) {
             // Upper left corner
@@ -898,7 +898,7 @@ var Life =
             $('#statsRule30').text(Life.generation + 1);
             return;
         }
-
+        // Rule 30 rules
         for (x = 1; x < Life.cellsX - 1; x++) {
             intval = Life.prevGen[y][x - 1] << 2 | Life.prevGen[y][x] << 1 | Life.prevGen[y][x + 1];
             switch (intval) {
