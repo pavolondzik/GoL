@@ -186,7 +186,7 @@
                 Life.loadPattern(url);
             }
         }
-    });
+    }));
 /* STOP PATTERNS > PATTERNS */
 
     // Creating dialog window "Conway's game of life"
