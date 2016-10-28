@@ -57,12 +57,10 @@
             SpinnerCellsY = val;
             if (code === 13) {
                 $(this).spinner('value', SpinnerCellsY);
-
                 Life.initUniverse(SpinnerCellsY, SpinnerCellsX);
             }
         }
     });
-
 /* STOP GRAPHICS > SIZE > SPINNER */
 
 /* START HOME > CONTROLS */
@@ -185,8 +183,8 @@
             if (url) {
                 Life.loadPattern(url);
             }
-        }
-    }));
+        });
+    });
 /* STOP PATTERNS > PATTERNS */
 
     // Creating dialog window "Conway's game of life"
