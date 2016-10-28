@@ -1,4 +1,6 @@
 ﻿$(document).ready(function () {
+    $("#Container.hidden").removeClass("hidden");
+
     var startLife = 'Start Life';
     var stopLife = 'Stop Life';
 
