@@ -1,4 +1,6 @@
 ﻿$(document).ready(function () {
+    $("#Container.hidden").removeClass("hidden");
+
     var startLife = 'Start Life';
     var stopLife = 'Stop Life';
 
@@ -55,10 +57,12 @@
             SpinnerCellsY = val;
             if (code === 13) {
                 $(this).spinner('value', SpinnerCellsY);
+
                 Life.initUniverse(SpinnerCellsY, SpinnerCellsX);
             }
         }
     });
+
 /* STOP GRAPHICS > SIZE > SPINNER */
 
 /* START HOME > CONTROLS */
@@ -181,7 +185,7 @@
             if (url) {
                 Life.loadPattern(url);
             }
-        });
+        }
     });
 /* STOP PATTERNS > PATTERNS */
 
